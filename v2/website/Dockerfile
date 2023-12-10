@@ -42,6 +42,8 @@ RUN --mount=type=cache,id=apk-cache,target=/var/cache/apk rm -rf /etc/apk/cache 
        && groupadd -g ${DOCKER_GID} www-data \
        && adduser -u ${DOCKER_UID} -D -S -G www-data www-data
 
+USER www-data
+
 ##### ADD_RESOURCE_BUILDER_HERE #####
 
 # =================================================
