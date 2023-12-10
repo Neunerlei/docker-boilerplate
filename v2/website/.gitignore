@@ -1,0 +1,19 @@
+# IDEA Code Style
+.idea/*
+!.idea/copyright/
+!.idea/copyright/*
+!.idea/codeStyles/
+!.idea/codeStyles/*
+
+# Env files
+.env.local
+.env.infrastructure
+.env.dockerCompose
+
+# Vendor dev directory
+app/vendor-dev/*
+!app/vendor-dev/.keep
+
+# Dev
+docker/nginx/config/ssl/*
+!docker/nginx/config/ssl/.keep

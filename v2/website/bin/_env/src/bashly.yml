@@ -1,0 +1,64 @@
+name: env
+help: Environment Control application
+version: 1.0.0
+
+commands:
+  - name: up
+    help: similar to docker-compose up, but sets all the required environment variables for buildkit. (All docker command options are valid)
+    catch_all: true
+    flags:
+      - long: --attach
+        short: -f
+        help: By default, the containers are started daemonized, use this to attach to their output
+  - name: stop
+    help: simple alias to docker-compose stop
+    catch_all: true
+  - name: down
+    alias: clean
+    help: simple alias to docker-compose down
+    catch_all: true
+  - name: restart
+    help: simple alias to docker-compose stop and docker-compose up
+    catch_all: true
+  - name: build
+    help: builds the docker image for local testing
+    catch_all: true
+  - name: logs
+    help: simple alias to docker-compose logs (All docker command options are valid)
+    catch_all: true
+    args:
+      - name: service
+        help: Allows you to define which service you want to connect to
+  - name: open
+    help: opens the current project in your browser.
+  - name: ssh
+    help: basically your docker-compose exec into the main app container
+    args:
+      - name: service
+        help: Allows you to define which service you want to connect to
+    flags:
+      - long: --cmd
+        short: -c
+        arg: command
+        default: bash
+        help: By default, we will use "bash" as command, you can use "sh" or any other command if you want to
+  - name: setup
+    alias: init
+    help: initializes the project on your machine
+  - name: setup-step
+    help: Sub-commands used by the "init" command to prepare your system
+    commands:
+      - name: prepare-env
+        help: prepares the .env.local file for the project
+      - name: permissions
+        help: copied from the .ddev directory to set up the permissions on the local files
+      - name: create-files
+        help: ensures that all files, required for the project setup are present
+      - name: mkcert
+        help: installs the mkcert dependency to create ssl certificates for the local environment
+      - name: hosts
+        help: tries to update the /etc/hosts file to match the ip and domain in your .env file
+      - name: composer-install
+        help: runs the composer install in the command
+  - name: rebuild-cli
+    help: rebuilds the bashly application you are currently using, based on the sources
