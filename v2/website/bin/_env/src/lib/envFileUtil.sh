@@ -63,7 +63,7 @@ loadEnvFile(){
   source ${ENV_FILE}
 
   # We have to check if there is a *.local override version for the env file now...
-  ENV_FILE_LOCAL=${ENV_FILE_LOCAL:-"${ENV_FILE}.local"}
+  ENV_FILE_LOCAL=$(getEnvFileLocalPath)
 
   if [ -f ${ENV_FILE_LOCAL} ]; then
   	source ${ENV_FILE_LOCAL}
