@@ -22,19 +22,6 @@ commands:
       - long: --yes
         short: -y
         help: Don't ask just do...
-  - name: test
-    help: allows you to run tests against the current codebase
-    commands:
-      - name: unit
-        help: runs the unit test cases
-        catch_all: true
-        flags:
-          - long: --coverage
-            short: -c
-            help: Generates a coverage report
-  - name: composer
-    help: runs a certain composer command for the project
-    catch_all: true
   - name: build
     help: builds the docker image for local testing
   - name: rebuild-cli

@@ -53,10 +53,7 @@ FROM app_root AS export
 
 ##### ADD_RESOURCE_BUILDER_COPY_HERE #####
 
-COPY --chown=1000:1000 \
- 	app/.env* \
- 	app/composer* \
- 	app/
+COPY --chown=${DOCKER_UID}:${DOCKER_GID} app /var/www/html
 
 RUN echo "umask 000" >> /root/.bashrc
 
