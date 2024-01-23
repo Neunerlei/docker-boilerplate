@@ -53,8 +53,6 @@ FROM app_root AS export
 
 ##### ADD_RESOURCE_BUILDER_COPY_HERE #####
 
-COPY --chown=${DOCKER_UID}:${DOCKER_GID} app /var/www/html
-
 RUN echo "umask 000" >> /root/.bashrc
 
 USER www-data

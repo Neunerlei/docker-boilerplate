@@ -1,7 +1,7 @@
 echo "[Setup]: Using mkcert to create a local SSL certificate"
 
 # If "mkcert" is already installed
-if [[ $(which mkcert) ]]; then
+if [[ -z "$(which mkcert)" ]]; then
   if [ -f /etc/redhat-release ]; then
     sudo yum update
     sudo yum install nss-tools
