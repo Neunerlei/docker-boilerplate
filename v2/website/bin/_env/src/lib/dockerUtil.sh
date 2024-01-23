@@ -1,57 +1,53 @@
 determineDockerExecutable(){
-  local dockerExecutable=$(which docker)
-  if [[ ${dockerExecutable} ]]; then
-    echo ${dockerExecutable}
+  local DOCKER_EXECUTABLE=$(which docker)
+  if [[ ${DOCKER_EXECUTABLE} ]]; then
+    echo ${DOCKER_EXECUTABLE}
     return
   fi
-  local podmanExecutable=$(which podman)
-  if [[ ${podmanExecutable} ]]; then
-    echo ${podmanExecutable}
+
+  local PODMAN_EXECUTABLE=$(which podman)
+  if [[ ${PODMAN_EXECUTABLE} ]]; then
+    echo ${PODMAN_EXECUTABLE}
     return
   fi
+
   echo "Sorry, but I did not find docker or podman on your system" >&2
   exit 1
 }
 
 determineDockerComposeExecutable() {
   # Special switch for pod-man
-  PODMAN_PATH=$(which podman-compose)
+  local PODMAN_PATH=$(which podman-compose)
 	if [[ ${PODMAN_PATH} ]]; then
 		echo ${PODMAN_PATH}
 		return
 	fi
-  PODMAN_PATH=$(which podman)
-	if [[ ${PODMAN_PATH} ]]; then
-		echo ${PODMAN_PATH} compose
-		return
-	fi
 
-	COMPOSE_PATH=$(which docker-compose)
-
-	# Check if some WSL weirdness is going on
-	if [[ ${COMPOSE_PATH} ]] && [[ ${COMPOSE_PATH} != /mnt/* ]]; then
-		# No wsl weirdness is going on -> return the path as is...
-		echo ${COMPOSE_PATH}
-		return
-	fi
-
-	COMPOSE_VERSION=$(docker compose version)
+	local COMPOSE_VERSION=$(docker compose version)
 
 	if [[ ${COMPOSE_VERSION} == *v2* ]]; then
 		echo "docker compose"
 		return
 	fi
 
+	local COMPOSE_PATH=$(which docker-compose)
+
+  local PODMAN_PATH=$(which podman)
+  if [[ ${PODMAN_PATH} ]]; then
+    echo ${PODMAN_PATH} compose
+  return
+
   echo "Sorry, but I did not find docker-compose or 'docker compose' on your system" >&2
   exit 1
 }
 
 determineDockerRuntimeType(){
-  local composeExecutable=$(determineDockerComposeExecutable)
-  if [[ ${composeExecutable} == *podman* ]]; then
+  local COMPOSE_EXECUTABLE=$(determineDockerComposeExecutable)
+  if [[ ${COMPOSE_EXECUTABLE} == *podman* ]]; then
     echo "podman"
     return
   fi
+
   echo "docker"
 }
 
