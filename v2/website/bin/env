@@ -654,47 +654,43 @@ inspect_args() {
 # :command.user_lib
 # _env/src/lib/dockerUtil.sh
 determineDockerExecutable(){
-  local dockerExecutable=$(which docker)
-  if [[ ${dockerExecutable} ]]; then
-    echo ${dockerExecutable}
+  local DOCKER_EXECUTABLE=$(which docker)
+  if [[ ${DOCKER_EXECUTABLE} ]]; then
+    echo ${DOCKER_EXECUTABLE}
     return
   fi
-  local podmanExecutable=$(which podman)
-  if [[ ${podmanExecutable} ]]; then
-    echo ${podmanExecutable}
+
+  local PODMAN_EXECUTABLE=$(which podman)
+  if [[ ${PODMAN_EXECUTABLE} ]]; then
+    echo ${PODMAN_EXECUTABLE}
     return
   fi
+
   echo "Sorry, but I did not find docker or podman on your system" >&2
   exit 1
 }
 
 determineDockerComposeExecutable() {
   # Special switch for pod-man
-  PODMAN_PATH=$(which podman-compose)
+  local PODMAN_PATH=$(which podman-compose)
 	if [[ ${PODMAN_PATH} ]]; then
 		echo ${PODMAN_PATH}
 		return
 	fi
-  PODMAN_PATH=$(which podman)
-	if [[ ${PODMAN_PATH} ]]; then
-		echo ${PODMAN_PATH} compose
-		return
-	fi
 
-	COMPOSE_PATH=$(which docker-compose)
-
-	# Check if some WSL weirdness is going on
-	if [[ ${COMPOSE_PATH} ]] && [[ ${COMPOSE_PATH} != /mnt/* ]]; then
-		# No wsl weirdness is going on -> return the path as is...
-		echo ${COMPOSE_PATH}
-		return
-	fi
-
-	COMPOSE_VERSION=$(docker compose version)
+	local COMPOSE_VERSION=$(docker compose version)
 
 	if [[ ${COMPOSE_VERSION} == *v2* ]]; then
 		echo "docker compose"
 		return
+	fi
+
+	local COMPOSE_PATH=$(which docker-compose)
+
+  local PODMAN_PATH=$(which podman)
+  if [[ ${PODMAN_PATH} ]]; then
+    echo ${PODMAN_PATH} compose
+    return
 	fi
 
   echo "Sorry, but I did not find docker-compose or 'docker compose' on your system" >&2
@@ -702,11 +698,12 @@ determineDockerComposeExecutable() {
 }
 
 determineDockerRuntimeType(){
-  local composeExecutable=$(determineDockerComposeExecutable)
-  if [[ ${composeExecutable} == *podman* ]]; then
+  local COMPOSE_EXECUTABLE=$(determineDockerComposeExecutable)
+  if [[ ${COMPOSE_EXECUTABLE} == *podman* ]]; then
     echo "podman"
     return
   fi
+
   echo "docker"
 }
 
@@ -801,7 +798,7 @@ loadEnvFile(){
   source ${ENV_FILE}
 
   # We have to check if there is a *.local override version for the env file now...
-  ENV_FILE_LOCAL=${ENV_FILE_LOCAL:-"${ENV_FILE}.local"}
+  ENV_FILE_LOCAL=$(getEnvFileLocalPath)
 
   if [ -f ${ENV_FILE_LOCAL} ]; then
   	source ${ENV_FILE_LOCAL}
@@ -1121,10 +1118,7 @@ env_logs_command() {
 # :command.function
 env_open_command() {
   # _env/src/open_command.sh
-  echo "# this file is located in '_env/src/open_command.sh'"
-  echo "# code for 'env open' goes here"
-  echo "# you can edit it freely and regenerate (it will not be overwritten)"
-  inspect_args
+  open "${DOCKER_PROJECT_PROTOCOL}://${DOCKER_PROJECT_DOMAIN}"
 
 }
 
@@ -1234,7 +1228,7 @@ env_setup_step_mkcert_command() {
   echo "[Setup]: Using mkcert to create a local SSL certificate"
 
   # If "mkcert" is already installed
-  if [[ $(which mkcert) ]]; then
+  if [[ -z "$(which mkcert)" ]]; then
     if [ -f /etc/redhat-release ]; then
       sudo yum update
       sudo yum install nss-tools
@@ -2394,14 +2388,15 @@ initialize() {
   DEFAULT_CONTAINER_NAME="${PROJECT_NAME:-project-without-name}-${DEFAULT_SERVICE_NAME}"
   DEFAULT_UID=${ENV_UID:-$(id -u)}
   DEFAULT_GID=${ENV_GID:-$(id -g)}
-  DEFAULT_BASE_DOMAIN=${BASE_DOMAIN:-neunerlei.local}
+  DEFAULT_BASE_DOMAIN=${BASE_DOMAIN:-dev.local}
 
   INITIAL_LOCAL_DEV_IP=127.88.8.1
 
-  PERSISTED_STORAGE_PATH=${PERSISTED_STORAGE_PATH:-${HOME}/.neunerlei-boilerplate}
+  PERSISTED_STORAGE_PATH=${PERSISTED_STORAGE_PATH:-${HOME}/.dev-local-boilerplate}
   PERSISTED_STORAGE_FILE=${PERSISTED_STORAGE_FILE:-config.json}
   PERSISTED_STORAGE_JQ_IMAGE=${PERSISTED_STORAGE_JQ_IMAGE:-ghcr.io/jqlang/jq:1.7}
 
+  DOCKER_PROJECT_PROTOCOL=${DOCKER_PROJECT_PROTOCOL:-${APP_PROTOCOL:-https}}
   DOCKER_PROJECT_DOMAIN=${DOCKER_PROJECT_DOMAIN:-${APP_DOMAIN:-${COMPOSE_PROJECT_NAME}.${DEFAULT_BASE_DOMAIN}}}
 
   DOCKER_SSL_DIR=${PROJECT_ROOT_DIR}/docker/nginx/config/ssl

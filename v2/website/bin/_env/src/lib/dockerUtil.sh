@@ -35,7 +35,8 @@ determineDockerComposeExecutable() {
   local PODMAN_PATH=$(which podman)
   if [[ ${PODMAN_PATH} ]]; then
     echo ${PODMAN_PATH} compose
-  return
+    return
+	fi
 
   echo "Sorry, but I did not find docker-compose or 'docker compose' on your system" >&2
   exit 1
