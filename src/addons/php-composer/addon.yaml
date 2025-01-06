@@ -1,0 +1,6 @@
+name: Composer
+do:
+  - type: files
+    source: ./files
+  - type: bashly
+    source: ./bashly.yaml

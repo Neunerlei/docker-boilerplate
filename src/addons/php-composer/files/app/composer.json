@@ -1,0 +1,8 @@
+{
+  "name": "new-project",
+  "description": "A boilerplate for creating new projects",
+  "type": "project",
+  "license": "Apache-2.0",
+  "require": {
+  }
+}

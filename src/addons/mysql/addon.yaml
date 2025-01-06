@@ -1,0 +1,14 @@
+name: Mysql DB
+do:
+  - type: files
+    source: ./files
+  - type: compose
+    source: compose.yaml
+    mergeServices:
+      - app
+  - type: appendTo
+    target: .env.tpl
+    source:
+      file: .env.tpl
+  - type: bashly
+    source: bashly.yaml

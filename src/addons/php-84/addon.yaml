@@ -1,0 +1,12 @@
+name: PHP 8.4
+do:
+  - type: files
+    source: ./files
+  - type: replace
+    target: Dockerfile
+    sources:
+      steps:
+        file: ./Dockerfile
+      baseImage: neunerlei/php:8.4-fpm-alpine
+  - type: compose
+    source: ./compose.yaml

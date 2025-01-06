@@ -1,0 +1,12 @@
+services:
+  builder:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - UID=${DOCKER_UID:-1000}
+        - GID=${DOCKER_GID:-1000}
+    container_name: docker-boilerplate-build
+    working_dir: /build
+    volumes:
+      - './:/build'

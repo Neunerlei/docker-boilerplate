@@ -1,0 +1,29 @@
+services:
+  # This node must be merged into your application container definition
+  app:
+    depends_on:
+      - mysql
+
+  mysql:
+    restart: "no"
+    container_name: '${PROJECT_NAME}-mysql'
+    image: 'mysql:8.0'
+    command: [ "--default-authentication-plugin=mysql_native_password", "--max_connections=2000" ]
+    environment:
+      MYSQL_ROOT_PASSWORD: $MYSQL_ROOT_PASSWORD
+      MYSQL_DATABASE: $MYSQL_DB_NAME
+      MYSQL_USER: $MYSQL_USER
+      MYSQL_PASSWORD: $MYSQL_PASSWORD
+    # Allow more connections to the database @see https://medium.com/@kauminikg/how-to-increase-max-connections-in-mysql-docker-container-772ae17e3526
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "${DOCKER_PROJECT_IP:-127.0.0.1}:${MYSQL_PORT:-3306}:3306"
+
+volumes:
+  mysql_data:
+    driver: local

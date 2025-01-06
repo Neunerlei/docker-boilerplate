@@ -1,0 +1,8 @@
+name: PHP 8.4
+base: php-84
+addons:
+  - php-composer
+  - nginx
+  - mysql
+  - phpunit
+  - mailhog

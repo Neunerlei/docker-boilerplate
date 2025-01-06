@@ -1,0 +1,18 @@
+{
+  "name": "neunerlei-boilerplate",
+  "version": "1.0.0",
+  "description": "A set of boilerplates to speed up local development",
+  "scripts": {
+    "build": "tsx builder/index.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "author": "",
+  "type": "module",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "yaml": "^2.6.1"
+  }
+}

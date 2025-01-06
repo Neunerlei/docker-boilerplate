@@ -1,0 +1,10 @@
+name: "Nginx"
+requiresAddons:
+  - setup
+do:
+  - type: files
+    source: ./files
+  - type: compose
+    source: ./compose.yaml
+  - type: bashly
+    source: ./bashly.yaml

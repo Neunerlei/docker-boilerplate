@@ -12,7 +12,6 @@
 *.txt text
 *.ini text
 *.inc text
-*.sh text
 
 *.png binary
 *.jpg binary

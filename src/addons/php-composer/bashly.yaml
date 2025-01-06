@@ -1,0 +1,4 @@
+commands:
+  - name: composer
+    help: runs a certain composer command for the project
+    catch_all: true
