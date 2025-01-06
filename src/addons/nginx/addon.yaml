@@ -1,6 +1,6 @@
 name: "Nginx"
-requiresAddons:
-  - setup
+# requiresAddons:
+#   - _setup
 do:
   - type: files
     source: ./files

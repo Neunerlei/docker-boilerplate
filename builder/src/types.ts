@@ -10,6 +10,11 @@ export type AddonDoReplaceAction = {
     sources: Record<string, string | { file: string }>
 }
 
+export type AddonDoNginxReplaceAction = {
+    type: "nginxReplace",
+    source: string | { file: string }
+}
+
 export type AddonDoComposeAction = {
     type: "compose",
     source: string,
@@ -41,10 +46,15 @@ export type AddonDoAction =
     | AddonDoBashlyAction
     | AddonDoAppendToAction
     | AddonDoPhpComposerAction
+    | AddonDoNginxReplaceAction;
+
+export type AddonDoActionType = AddonDoAction['type'];
 
 export type AddonStructureYaml = {
     name: string;
     do: AddonDoAction[];
+    // Actions that are applied after ALL actions in ALL addons are applied
+    doPost?: AddonDoAction[];
 }
 
 export type AddonStructure = AddonStructureYaml & {

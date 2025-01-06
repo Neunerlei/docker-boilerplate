@@ -1,14 +1,25 @@
 import fs from "fs";
 import path from "path";
-import {AddonStructure, AddonStructureList, DefinitionStructure} from "./types";
-import {addonDir} from "./constants";
-import {applyDoFiles} from "./addon/applyDoFiles";
-import {applyDoReplace} from "./addon/applyDoReplace";
-import {applyDoCompose} from "./addon/applyDoCompose";
-import {applyBashly} from "./addon/applyBashly";
-import {parse} from "yaml";
-import {applyAppendTo} from "./addon/applyAppendTo";
-import {applyPhpComposer} from "./addon/applyPhpComposer";
+import { AddonDoAction, AddonDoActionType, AddonStructure, AddonStructureList, DefinitionStructure } from "./types";
+import { addonDir } from "./constants";
+import { applyDoFiles } from "./addon/applyDoFiles";
+import { applyDoReplace } from "./addon/applyDoReplace";
+import { applyDoCompose } from "./addon/applyDoCompose";
+import { applyBashly } from "./addon/applyBashly";
+import { parse } from "yaml";
+import { applyAppendTo } from "./addon/applyAppendTo";
+import { applyPhpComposer } from "./addon/applyPhpComposer";
+import { applyNginxReplace } from "./addon/applyNginxReplace";
+
+const actions: Record<AddonDoActionType, (action: AddonDoAction, addon: AddonStructure) => void> = {
+    files: applyDoFiles,
+    replace: applyDoReplace,
+    compose: applyDoCompose,
+    bashly: applyBashly,
+    appendTo: applyAppendTo,
+    phpComposer: applyPhpComposer,
+    nginxReplace: applyNginxReplace,
+}
 
 export function readAddons(available: string[]): AddonStructureList {
     if (available.length === 0) {
@@ -58,35 +69,25 @@ export function readAddons(available: string[]): AddonStructureList {
 
 export function applyAddons(def: DefinitionStructure, addons: AddonStructure[]) {
     for (const addon of addons) {
-        let i = 0;
-        for (const action of addon.do) {
-            try {
-                switch (action.type) {
-                    case "files":
-                        applyDoFiles(action, addon);
-                        break;
-                    case "replace":
-                        applyDoReplace(action, addon);
-                        break;
-                    case "compose":
-                        applyDoCompose(action, addon);
-                        break;
-                    case "bashly":
-                        applyBashly(action, addon);
-                        break
-                    case "appendTo":
-                        applyAppendTo(action, addon);
-                        break
-                    case "phpComposer":
-                        applyPhpComposer(action);
-                        break
-                    default:
-                        throw new Error(`Unknown action type ${(action as any).type}`);
-                }
-            } catch (e) {
-                throw new Error(`Failed to build definition ${def.name}, because addon ${addon.name} failed to perform action at position ${i} (${action.type}): ${e.message}`);
-            }
-            i++;
+        applyActions(addon.do, addon, def);
+    }
+    for (const addon of addons) {
+        if(Array.isArray(addon.doPost)){
+            applyActions(addon.doPost, addon, def);
         }
+    }
+}
+
+function applyActions(doActions: AddonDoAction[], addon: AddonStructure, def: DefinitionStructure) {
+    let i = 0;
+    for (const action of doActions) {
+        try {
+            if (typeof actions[action.type] === 'function') {
+                actions[action.type](action, addon);
+            }
+        } catch (e) {
+            throw new Error(`Failed to build definition ${def.name}, because addon ${addon.name} failed to perform action at position ${i} (${action.type}): ${e.message}`);
+        }
+        i++;
     }
 }

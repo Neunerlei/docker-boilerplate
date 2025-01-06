@@ -1,0 +1,6 @@
+name: Node 23
+base: node-23
+addons:
+  - nginx
+  - mysql
+  - mailhog

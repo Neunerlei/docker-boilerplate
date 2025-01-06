@@ -1,0 +1,12 @@
+{
+    "name": "@neunerlei/boilerplate",
+    "version": "1.0.0",
+    "description": "Generic entry point to keep the container running",
+    "main": "index.js",
+    "scripts": {
+        "start": "node /var/www/html/app/index.js start",
+        "start:development": "node /var/www/html/app/index.js start:development"
+    },
+    "author": "Neunerlei",
+    "license": "Apache-2.0"
+}
