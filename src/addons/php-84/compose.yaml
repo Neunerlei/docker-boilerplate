@@ -1,6 +1,7 @@
 services:
   app:
     container_name: '${PROJECT_NAME}-app'
+    image: ${PROJECT_NAME}-app:dev
     build:
       context: .
       target: app_dev
