@@ -1,17 +1,17 @@
 services:
-  app:
-    container_name: '${PROJECT_NAME}-app'
-    image: ${PROJECT_NAME}-app:dev
+  '###{service_name}###':
+    container_name: '${PROJECT_NAME}-###{service_name}###'
+    image: ${PROJECT_NAME}-###{service_name}###:dev
     build:
       context: .
-      target: app_dev
+      target: '###{service_name}###_dev'
       args:
         - DOCKER_RUNTIME=${DOCKER_RUNTIME:-docker}
         - DOCKER_GID=${DOCKER_GID:-1000}
         - DOCKER_UID=${DOCKER_UID:-1000}
     restart: "no"
     volumes:
-      - ./app:/var/www/html
+      - './###{service_name}###:/var/www/html'
     healthcheck:
       test: curl --fail http://localhost:8000 || exit 1
       interval: 10s
@@ -22,5 +22,3 @@ services:
       - "${DOCKER_PROJECT_IP:-127.0.0.1}:8000:8000"
     extra_hosts:
       - host.docker.internal:host-gateway
-volumes:
-  php_socket:

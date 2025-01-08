@@ -1,10 +1,11 @@
-import {AddonDoPhpComposerAction} from "../types";
+import { AddonDoPhpComposerAction, AddonStructure } from "../types";
 import path from "path";
-import {distDir} from "../constants";
+import { distDir } from "../constants";
 import fs from "fs";
 import deepmerge from "deepmerge";
+import { replaceFrontendServiceName } from "../frontend";
 
-export function applyPhpComposer(action: AddonDoPhpComposerAction) {
+export function applyPhpComposer(action: AddonDoPhpComposerAction, addon: AddonStructure) {
     if (!action.source) {
         throw new Error('"source" not defined');
     }
@@ -23,4 +24,6 @@ export function applyPhpComposer(action: AddonDoPhpComposerAction) {
     const merged = deepmerge(target, source);
 
     fs.writeFileSync(targetPath, JSON.stringify(merged, null, 2));
+
+    replaceFrontendServiceName(targetPath, addon);
 }

@@ -10,6 +10,7 @@ import { parse } from "yaml";
 import { applyAppendTo } from "./addon/applyAppendTo";
 import { applyPhpComposer } from "./addon/applyPhpComposer";
 import { applyNginxReplace } from "./addon/applyNginxReplace";
+import { applyDockerfile } from "./addon/applyDockerfile";
 
 const actions: Record<AddonDoActionType, (action: AddonDoAction, addon: AddonStructure) => void> = {
     files: applyDoFiles,
@@ -19,6 +20,7 @@ const actions: Record<AddonDoActionType, (action: AddonDoAction, addon: AddonStr
     appendTo: applyAppendTo,
     phpComposer: applyPhpComposer,
     nginxReplace: applyNginxReplace,
+    dockerfile: applyDockerfile,
 }
 
 export function readAddons(available: string[]): AddonStructureList {
@@ -68,26 +70,27 @@ export function readAddons(available: string[]): AddonStructureList {
 }
 
 export function applyAddons(def: DefinitionStructure, addons: AddonStructure[]) {
-    for (const addon of addons) {
-        applyActions(addon.do, addon, def);
-    }
-    for (const addon of addons) {
-        if(Array.isArray(addon.doPost)){
-            applyActions(addon.doPost, addon, def);
-        }
-    }
-}
+    const dos = getActionsSortedByPriority(addons);
 
-function applyActions(doActions: AddonDoAction[], addon: AddonStructure, def: DefinitionStructure) {
-    let i = 0;
-    for (const action of doActions) {
+    for (const {action, addon, initialPosition} of dos) {
         try {
             if (typeof actions[action.type] === 'function') {
                 actions[action.type](action, addon);
             }
         } catch (e) {
-            throw new Error(`Failed to build definition ${def.name}, because addon ${addon.name} failed to perform action at position ${i} (${action.type}): ${e.message}`);
+            throw new Error(`Failed to build definition ${def.name}, because addon ${addon.name} failed to perform action at position ${initialPosition} (${action.type}): ${e.message}`);
         }
-        i++;
     }
+}
+
+function getActionsSortedByPriority(addons: AddonStructure[]) {
+    const sortedDos: Array<{action: AddonDoAction, addon: AddonStructure, priority: number, initialPosition: number}> = [];
+    for (const addon of addons) {
+        let i = 0;
+        for (const action of addon.do) {
+            sortedDos.push({ action, addon, priority: action.priority ?? 0, initialPosition: i});
+            i++;
+        }
+    }
+    return sortedDos.sort((a, b) => (b.priority - a.priority));
 }

@@ -1,9 +1,10 @@
-import {AddonDoComposeAction, AddonStructure} from "../types";
+import { AddonDoComposeAction, AddonStructure } from "../types";
 import path from "path";
 import fs from "fs";
-import {parse, stringify} from "yaml";
+import { parse, stringify } from "yaml";
 import deepmerge from "deepmerge";
-import {distDir} from "../constants";
+import { distDir } from "../constants";
+import { replaceFrontendServiceName } from "../frontend";
 
 export function applyDoCompose(action: AddonDoComposeAction, addon: AddonStructure) {
     if (!action.source) {
@@ -28,6 +29,8 @@ export function applyDoCompose(action: AddonDoComposeAction, addon: AddonStructu
     }
 
     fs.writeFileSync(targetPath, stringify(deepmerge(target, source)));
+
+    replaceFrontendServiceName(targetPath, addon);
 }
 
 function mergeServices(target: Record<string, any>, source: Record<string, any>, servicesToMerge?: string[]) {

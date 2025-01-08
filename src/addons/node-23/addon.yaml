@@ -2,15 +2,24 @@ name: Node 23
 do:
   - type: files
     source: ./files
-  - type: replace
-    target: Dockerfile
-    sources:
-      steps:
-        file: ./Dockerfile
-      baseImage: node:23-alpine
+  - type: dockerfile
+    baseImage: node:23-alpine
+    dev: 
+      source: 
+        file: ./dev.Dockerfile
+    prod: 
+      source: 
+        file: ./prod.Dockerfile
+    frontend: 
+      source: 
+        file: ./dev.Dockerfile
+      builder: 
+        source: 
+          file: ./builder.Dockerfile
+        dist: /var/www/html/dist
   - type: compose
     source: ./compose.yaml
-doPost:
   - type: nginxReplace
+    priority: -100
     source:
       file: ./nginx.proxy.conf

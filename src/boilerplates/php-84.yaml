@@ -6,3 +6,5 @@ addons:
   - mysql
   - phpunit
   - mailhog
+frontends:
+  - node-23

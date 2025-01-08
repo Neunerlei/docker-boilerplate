@@ -4,8 +4,9 @@
     "description": "Generic entry point to keep the container running",
     "main": "index.js",
     "scripts": {
-        "start": "node /var/www/html/app/index.js start",
-        "start:development": "node /var/www/html/app/index.js start:development"
+        "prod": "node /var/www/html/index.js start",
+        "dev": "node /var/www/html/index.js start:development",
+        "build": "node /var/www/html/index.js build"
     },
     "author": "Neunerlei",
     "license": "Apache-2.0"

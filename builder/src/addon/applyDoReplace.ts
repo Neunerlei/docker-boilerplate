@@ -1,7 +1,8 @@
-import {AddonDoReplaceAction, AddonStructure} from "../types";
+import { AddonDoReplaceAction, AddonStructure } from "../types";
 import path from "path";
 import fs from "fs";
-import {distDir} from "../constants";
+import { distDir } from "../constants";
+import { addToReplaceQueue, replaceMultipleInFile, resolveReplacement } from "../replaceQueue";
 
 export function applyDoReplace(action: AddonDoReplaceAction, addon: AddonStructure) {
     if (!action.target) {
@@ -17,23 +18,12 @@ export function applyDoReplace(action: AddonDoReplaceAction, addon: AddonStructu
         throw new Error(`Target file ${targetPath} not found`);
     }
 
-    let targetContent = fs.readFileSync(targetPath, 'utf8').toString();
-    for (const [placeholder, value] of Object.entries(action.sources)) {
-        const regex = new RegExp('###{' + placeholder + '}###', 'g');
-
-        let replacement: string;
-        if (typeof value === 'object' && 'file' in value) {
-            const sourcePath = path.join(addon.sourceDir, value.file);
-            if (!fs.existsSync(sourcePath)) {
-                throw new Error(`Source file ${sourcePath} not found`);
-            }
-            replacement = fs.readFileSync(sourcePath, 'utf8').toString();
-        } else {
-            replacement = value;
+    if (action.immediate) {
+        replaceMultipleInFile(targetPath, Object.entries(action.sources)
+            .map(([placeholder, value]) => ({ placeholder, replacement: resolveReplacement(value, addon) })));
+    } else {
+        for (const [placeholder, value] of Object.entries(action.sources)) {
+            addToReplaceQueue(targetPath, placeholder, resolveReplacement(value, addon));
         }
-
-        targetContent = targetContent.replace(regex, replacement);
     }
-
-    fs.writeFileSync(targetPath, targetContent);
 }

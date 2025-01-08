@@ -1,7 +1,8 @@
-import {AddonDoFilesAction, AddonStructure} from "../types";
+import { AddonDoFilesAction, AddonStructure } from "../types";
 import path from "path";
 import fs from "fs";
-import {distDir} from "../constants";
+import { distDir } from "../constants";
+import { replaceFrontendServiceName } from "../frontend";
 
 export function applyDoFiles(action: AddonDoFilesAction, addon: AddonStructure) {
     if (!action.source) {
@@ -14,4 +15,6 @@ export function applyDoFiles(action: AddonDoFilesAction, addon: AddonStructure) 
     }
 
     fs.cpSync(sourcePath, distDir, {recursive: true});
+
+    replaceFrontendServiceName(distDir, addon);
 }

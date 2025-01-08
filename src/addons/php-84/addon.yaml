@@ -2,16 +2,18 @@ name: PHP 8.4
 do:
   - type: files
     source: ./files
-  - type: replace
-    target: Dockerfile
-    sources:
-      steps:
-        file: ./Dockerfile
-      baseImage: neunerlei/php:8.4-fpm-alpine
+  - type: dockerfile
+    baseImage: neunerlei/php:8.4-fpm-alpine
+    dev:
+      source:
+        file: ./dev.Dockerfile
+    prod:
+      source:
+        file: ./prod.Dockerfile
   - type: compose
     source: ./compose.yaml
-doPost:
   - type: nginxReplace
+    priority: -100
     source:
       file: ./nginx.proxy.conf
 
