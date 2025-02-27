@@ -1,3 +1,0 @@
-commands:
-  - name: setup
-    help: "Runs the setup for the project"

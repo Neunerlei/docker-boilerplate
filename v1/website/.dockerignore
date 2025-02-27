@@ -1,5 +1,0 @@
-bin/env
-bin/_env
-.env*
-docker-compose.yml
-Dockerfile

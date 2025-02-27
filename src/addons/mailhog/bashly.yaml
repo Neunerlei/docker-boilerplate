@@ -1,3 +1,0 @@
-commands:
-  - name: mailhog
-    help: starts the interface of the mailhog mailtrap in your browser

@@ -1,3 +1,0 @@
-commands:
-  - name: open
-    help: opens the current project in your browser.

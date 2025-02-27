@@ -1,8 +1,0 @@
-services:
-  mailhog:
-    container_name: '${PROJECT_NAME}-mailhog'
-    restart: "no"
-    image: mailhog/mailhog:v1.0.1
-    ports:
-      - "${DOCKER_PROJECT_IP:-127.0.0.1}:1025:1025"
-      - "${DOCKER_PROJECT_IP:-127.0.0.1}:${MAILHOG_PORT:-8025}:8025"

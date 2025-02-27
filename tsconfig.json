@@ -1,8 +1,12 @@
 {
   "include": [
-    "./builder/**/*.ts"
+    "./builder/**/*.ts",
+    "./partials/**/*.ts",
   ],
   "compilerOptions": {
+    "paths": {
+      "@builder/*": ["./builder/*"]
+    },
     "moduleDetection": "force",
     "module": "Preserve",
     "resolveJsonModule": true,
