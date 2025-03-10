@@ -124,10 +124,20 @@ dockerSsh() {
 
   CONTAINER_ID=$(getContainerIdFromServiceName "$SERVICE")
   BASH_SHELL=$($DOCKER_EXECUTABLE exec "${CONTAINER_ID}" which bash || echo "")
-  if [[ -z "${BASH_SHELL}" ]]; then 
+  if [[ -n "${BASH_SHELL}" ]]; then
     CONFIGURED_SHELL=${BASH_SHELL}
   else
-    CONFIGURED_SHELL=$($DOCKER_EXECUTABLE exec "${CONTAINER_ID}" getent passwd root | cut -d: -f7)
+    SH_SHELL=$($DOCKER_EXECUTABLE exec "${CONTAINER_ID}" which sh || echo "")
+    if [[ -n "${SH_SHELL}" ]]; then
+      CONFIGURED_SHELL=${SH_SHELL}
+    else
+      CONFIGURED_SHELL=$($DOCKER_EXECUTABLE exec "${CONTAINER_ID}" getent passwd root | cut -d: -f7)
+    fi
+  fi
+
+  if [[ -z "${CONFIGURED_SHELL}" ]]; then
+    echo "Could not determine the shell of the container" >&2
+    exit 1
   fi
 
   COMMAND_PARAM=""
