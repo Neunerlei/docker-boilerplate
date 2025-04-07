@@ -1,7 +1,7 @@
 import {AbstractBody} from './AbstractBody';
 import {BuildContext} from '../../util/BuildContext';
 import {input} from '@inquirer/prompts';
-import {indent} from '../../util/indent';
+import {textUtils} from '../../util/textUtils';
 
 type NginxLocationItem = {
     route: string;
@@ -67,12 +67,12 @@ export class NginxBody extends AbstractBody {
     public getValue() {
         return {
             locations: this._locations
-        }
+        };
     }
 
     public toLocationString(): string {
         return Object.values(this._locations).map((item) => {
-            return `location ${item.route} {\n${indent(item.config)}\n}`;
+            return `location ${item.route} {\n${textUtils(item.config)}\n}`;
         }).join('\n\n');
     }
 }

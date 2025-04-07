@@ -1,16 +1,14 @@
-import {PartialContext} from "./PartialContext";
-import {PartialSortRules} from "./PartialSortRules";
-import {IFs} from "memfs";
-import {FsUtils} from "../util/FsUtils";
-import {StringBody} from "../filebuilder/body/StringBody";
-import {ObjectBody} from "../filebuilder/body/ObjectBody";
-import {DockerfileBody} from "../filebuilder/body/DockerfileBody";
-import {DockerComposeBody} from '../filebuilder/body/DockerComposeBody';
-import {BuildContext} from '../util/BuildContext';
-import {FileBuilder} from '../filebuilder/FileBuilder';
-import {NginxBody} from '../filebuilder/body/NginxBody';
+import {PartialContext} from './PartialContext.js';
+import {PartialSortRules} from './PartialSortRules.js';
+import {IFs} from 'memfs';
+import {FsUtils} from '../util/FsUtils.js';
+import {FileBuilder} from '../filebuilder/FileBuilder.js';
+import type {BuildContext} from '../util/BuildContext.js';
+import {BodyBuilderCollector} from '../filebuilder/BodyBuilderCollector.js';
 
 export type PartialList = Record<string, PartialDefinition>;
+
+export type BodyBuilder<T = any> = (body: T, filename: string, context: BuildContext) => Promise<void>;
 
 export interface PartialDefinition {
     /**
@@ -55,7 +53,7 @@ export interface PartialDefinition {
      * Can be set to "false", indicating it should never be selectable by a user, which means it can only be registered as a dependency using "requires" of another partial.
      * @param selectedKeys
      */
-    selectable?: ((selectedKeys: string[]) => Promise<boolean>) | false
+    selectable?: ((selectedKeys: string[]) => Promise<boolean>) | false;
 
     /**
      * Loads all files that this partial should provide into the provided file system.
@@ -63,58 +61,43 @@ export interface PartialDefinition {
      * @param mfs The file system to load the files into
      * @param fsUtil A utility class that helps loading files and directories
      */
-    loadFiles?: (mfs: IFs, fsUtil: FsUtils) => Promise<void>
+    loadFiles?: (mfs: IFs, fsUtil: FsUtils) => Promise<void>;
 
     /**
      * This hook is called after all files have been loaded into the file system.
-     * It can be
+     * It can be used to generate additional files or to modify the existing ones.
+     * You can either manipulate the filesystem directly or trigger a file builder,
+     * which is a hook that allows all active partials to contribute to the file generation.
+     *
+     * See the "bodyBuilders" property for more information.
      *
      * @param mfs
      */
-    buildFiles?: (mfs: IFs, fb: (filename: string) => FileBuilder) => Promise<void>
+    buildFiles?: (mfs: IFs, fb: (filename: string) => FileBuilder) => Promise<void>;
 
     /**
      * A list of hooks, that allow partials to act together on a certain set of files.
      * This is normally used for well known files like "composer.json" or "package.json".
      * The builders are only used if one of the other partials in the stack has a file builder for the same file.
      */
-    fileBuilder?: {
-        [filename: string]: FileBuilderDefinition
-    } & {
-        '.gitignore'?: FileBuilderDefinition<StringBody>
-        '.env.tpl'?: FileBuilderDefinition<StringBody>
-        'composer.json'?: FileBuilderDefinition<ObjectBody>
-        'package.json'?: FileBuilderDefinition<ObjectBody>
-        'bashly.yml'?: FileBuilderDefinition<ObjectBody>
-        'Dockerfile'?: FileBuilderDefinition<DockerfileBody>
-        'docker-compose.yml'?: FileBuilderDefinition<DockerComposeBody>
-        'nginx.conf'?: FileBuilderDefinition<NginxBody>
-        'php.dev.ini'?: FileBuilderDefinition<StringBody>
-    }
+    bodyBuilders?: (collector: BodyBuilderCollector) => Promise<void>;
 
     /**
      * A callback to be executed before any other actions occur.
      * Useful for setting up some initial state or to ask the user for some input.
      */
-    init?: () => Promise<void>
+    init?: () => Promise<void>;
 
     /**
      * The main callback of the partial to do stuff.
      */
-    apply?: () => Promise<void>
+    apply?: () => Promise<void>;
 
     /**
      * A callback to be executed after all partials have been applied.
      * This can be useful to do some final cleanup or to execute some final tasks.
      */
-    applyPost?: () => Promise<void>
-}
-
-export type FileBuilderCallback<T = any> = (body: T, filename: string, context: BuildContext) => Promise<void>;
-export type FileBuilderDefinition<T = any> = FileBuilderCallback<T> | {
-    before?: FileBuilderCallback<T>,
-    build?: FileBuilderCallback<T>,
-    after?: FileBuilderCallback<T>,
+    applyPost?: () => Promise<void>;
 }
 
 export type Partial = ((context: PartialContext) => PartialDefinition) & { __partialId?: Symbol };

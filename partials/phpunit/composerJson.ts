@@ -1,7 +1,7 @@
-import {ObjectBody} from "@builder/filebuilder/body/ObjectBody";
-import {FileBuilderCallback} from "@builder/partial/types";
+import {ObjectBody} from '@builder/filebuilder/body/ObjectBody';
+import type {BodyBuilder} from '@builder/partial/types';
 
-export const composerJson: FileBuilderCallback<ObjectBody> = async function (body) {
+export const composerJson: BodyBuilder<ObjectBody> = async function (body) {
     body.merge({
         'require-dev': {
             'phpunit/phpunit': '^9.5'
@@ -17,5 +17,5 @@ export const composerJson: FileBuilderCallback<ObjectBody> = async function (bod
             'test:unit:coverage:text': 'XDEBUG_MODE=coverage phpunit --testsuite unit --exclude-group integration --coverage-text',
             'test:unit:coverage:clover': 'XDEBUG_MODE=coverage phpunit --testsuite unit --coverage-clover .phpunit.coverage/coverage-clover.xml'
         }
-    })
-}
+    });
+};

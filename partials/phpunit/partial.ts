@@ -1,8 +1,7 @@
-import {PartialContext} from "@builder/partial/PartialContext";
-import {PartialDefinition} from "@builder/partial/types";
-import {composerJson} from "./composerJson";
-import {bashlyYml} from "./bashlyYml";
-import {gitignore} from "./gitignore";
+import {PartialContext} from '@builder/partial/PartialContext';
+import {PartialDefinition} from '@builder/partial/types';
+import {composerJson} from './composerJson';
+import {gitignore} from './gitignore';
 import {dockerfile} from './dockerfile';
 
 export default function (context: PartialContext): PartialDefinition {
@@ -15,15 +14,14 @@ export default function (context: PartialContext): PartialDefinition {
         sort: async r => r.after('php').after('phpComposer') && void 0,
         loadFiles: async (fs, utils) => {
             utils.setBasePath(import.meta.dirname);
-            const appPath = context.getBuildContext().getPartialDir('php');
-            utils.loadRecursive('tests', appPath + '/tests');
-            utils.loadRecursive('files');
+            utils.loadRecursive('appFiles', context.getBuildContext().getPartialDir('php'));
+            utils.loadRecursive('files', '/');
         },
-        fileBuilder: {
-            'composer.json': composerJson,
-            'bashly.yml': bashlyYml,
-            '.gitignore': gitignore,
-            'Dockerfile': dockerfile
+        bodyBuilders: async (collector) => {
+            collector
+                .add('composer.json', composerJson)
+                .add('.gitignore', gitignore)
+                .add('Dockerfile', dockerfile);
         }
-    }
+    };
 }

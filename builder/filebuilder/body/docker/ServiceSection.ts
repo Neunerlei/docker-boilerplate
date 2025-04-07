@@ -55,7 +55,7 @@ export class ServiceSection {
     }
 
     public has(name: string): boolean {
-        return this._instructions[name] !== undefined && this._instructions[name].getInstructions().length > 0;
+        return this._instructions[name] !== undefined && this._instructions[name].size() > 0;
     }
 
     public remove(name: string): this {

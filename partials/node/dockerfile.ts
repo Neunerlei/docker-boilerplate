@@ -1,12 +1,12 @@
-import {DockerfileBody} from "@builder/filebuilder/body/DockerfileBody";
-import {FileBuilderCallback} from "@builder/partial/types";
-import {PartialContext} from "@builder/partial/PartialContext";
+import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
+import {PartialContext} from '@builder/partial/PartialContext';
+import type {BodyBuilder} from '@builder/partial/types';
 
-export function dockerfile(context: PartialContext): FileBuilderCallback<DockerfileBody> {
+export function dockerfile(context: PartialContext): BodyBuilder<DockerfileBody> {
     return async function (body) {
         const node = body.getForContext(context);
         const version = context.getVersion() ?? context.getDefinition().versions![0];
-        const appSource = context.getBuildContext().getPartialDir(context.getKey())
+        const appSource = context.getBuildContext().getPartialDir(context.getKey());
 
         const image = 'node:' + version + '-alpine';
 
@@ -42,8 +42,10 @@ RUN --mount=type=cache,id=apk-cache,target=/var/cache/apk rm -rf /etc/apk/cache 
     && groupadd -g \${DOCKER_GID} www-data \\
     && adduser -u \${DOCKER_UID} -D -S -G www-data www-data
 `)
-            .add('entrypoint', 'ENTRYPOINT [ "npm", "run", "dev" ]')
-            .add('user.wwwData', 'USER www-data')
+            .add('copy.entrypoint', 'COPY docker/node/node.entrypoint.dev.sh /usr/bin/app/boot.sh')
+            .add('run.entrypointPermissions', 'RUN chmod +x /usr/bin/app/boot.sh')
+            .add('entrypoint', 'ENTRYPOINT /usr/bin/app/boot.sh')
+            .add('user.wwwData', 'USER www-data');
 
         // PROD
         // ==========================================================
@@ -61,5 +63,5 @@ RUN find /var/www/html/bin -type f -iname "*.sh" -exec chmod +x {} \\;
             .add('entrypoint', 'ENTRYPOINT [ "npm", "run", "prod" ]')
         ;
 
-    }
+    };
 }

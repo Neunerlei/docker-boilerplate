@@ -1,11 +1,9 @@
-import {PartialContext} from '@builder/partial/PartialContext';
 import {PartialDefinition} from '@builder/partial/types';
-import {bashlyYml} from './bashlyYml';
 import {NginxBody} from '@builder/filebuilder/body/NginxBody';
 import {replaceMarkerWithIndent} from '@builder/util/replaceMarkerWithIndent';
 import {dockerComposeYml} from './dockerComposeYml';
 
-export default function (context: PartialContext): PartialDefinition {
+export default function (): PartialDefinition {
     return {
         key: 'nginx',
         name: 'Nginx',
@@ -38,11 +36,8 @@ export default function (context: PartialContext): PartialDefinition {
                 })
                 .build();
         },
-        fileBuilder: {
-            'bashly.yml': bashlyYml,
-            'docker-compose.yml': {
-                before: dockerComposeYml
-            }
+        bodyBuilders: async (collector) => {
+            collector.add('docker-compose.yml', dockerComposeYml, 'before');
         }
-    }
+    };
 }

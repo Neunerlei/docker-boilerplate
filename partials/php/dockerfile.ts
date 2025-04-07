@@ -1,13 +1,13 @@
-import {DockerfileBody} from "@builder/filebuilder/body/DockerfileBody";
-import {FileBuilderCallback} from "@builder/partial/types";
+import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
+import type {BodyBuilder} from '@builder/partial/types.ts';
 
-export const dockerfileFpmAlpine: FileBuilderCallback<DockerfileBody> =
+export const dockerfileFpmDebian: BodyBuilder<DockerfileBody> =
     async function (body, _, context) {
         const php = body.add('php');
         const version = context.getPartialVersion('php');
         const appSource = context.getPartialDir('php');
 
-        const image = 'neunerlei/php:' + version + '-fpm-alpine';
+        const image = 'neunerlei/php:' + version + '-fpm-debian';
 
         php.setCommonRootInstructions(image);
 
@@ -19,8 +19,9 @@ export const dockerfileFpmAlpine: FileBuilderCallback<DockerfileBody> =
             .add('env.app_env', 'ENV APP_ENV=dev')
             .add('run.addSudo', `
 # Add sudo command
-RUN --mount=type=cache,id=apk-cache,target=/var/cache/apk rm -rf /etc/apk/cache && ln -s /var/cache/apk /etc/apk/cache && \\
-    apk update && apk upgrade && apk add \\
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get upgrade -y && apt-get install -y \
     sudo
 `)
             .add('copy.addComposer', `
@@ -34,14 +35,16 @@ RUN rm -rf /usr/local/etc/php/conf.d/zzz.app.prod.ini
 `)
             .add('run.recreateUser', `
 # Recreate the www-data user and group with the current users id
-RUN --mount=type=cache,id=apk-cache,target=/var/cache/apk rm -rf /etc/apk/cache && ln -s /var/cache/apk /etc/apk/cache && \\
-\tapk update && apk upgrade && apk add shadow \\
-       && (userdel -r www-data || true) \\
-       && (groupdel -f www-data || true) \\
-       && groupadd -g \${DOCKER_GID} www-data \\
-       && adduser -u \${DOCKER_UID} -D -S -G www-data www-data
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y usermod && \
+    groupdel -f www-data || true && \
+    userdel -r www-data || true && \
+    groupadd -g \${DOCKER_GID} www-data && \
+    useradd -u \${DOCKER_UID} -g www-data www-data
 `)
-            .add('user.wwwData', 'USER www-data')
+            .add('copy.entrypoint', 'COPY docker/php/php.entrypoint.dev.sh /user/bin/app/boot.local.sh')
+            .add('user.wwwData', 'USER www-data');
 
         // PROD
         // ==========================================================
@@ -74,4 +77,4 @@ RUN --mount=type=bind,from=composer:2,source=/usr/bin/composer,target=/usr/bin/c
             .add('user.root', 'USER root')
         ;
 
-    }
+    };

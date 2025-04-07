@@ -1,7 +1,7 @@
-import {FileBuilderCallback} from '@builder/partial/types';
 import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
+import type {BodyBuilder} from '@builder/partial/types.ts';
 
-export const dockerComposeYml: FileBuilderCallback<DockerComposeBody> = async (body, _, context) => {
+export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
     body.merge({
         volumes: {
             php_socket: {}
@@ -9,7 +9,6 @@ export const dockerComposeYml: FileBuilderCallback<DockerComposeBody> = async (b
     });
 
     const key = context.getRealPartialKey('php');
-    const appSource = context.getPartialDir('php')
 
     body.setService('php', {
         container_name: '${PROJECT_NAME}-' + key,
@@ -26,7 +25,7 @@ export const dockerComposeYml: FileBuilderCallback<DockerComposeBody> = async (b
         restart: 'no',
         volumes: [
             'php_socket:/var/run/php',
-            '.' + appSource + ':/var/www/html'
+            '.' + context.getPartialDir('php') + ':/var/www/html'
         ],
         healthcheck: {
             test: 'cgi-fcgi -bind -connect 127.0.0.1:9000 || exit 1',
@@ -42,4 +41,12 @@ export const dockerComposeYml: FileBuilderCallback<DockerComposeBody> = async (b
             'host.docker.internal:host-gateway'
         ]
     });
-}
+};
+
+export const dockerComposeYmlNginxShare: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
+    body.mergeService('nginx', {
+        volumes: [
+            '.' + context.getPartialDir('php') + '/public:/var/www/html/public'
+        ]
+    });
+};

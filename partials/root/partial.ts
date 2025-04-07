@@ -1,5 +1,6 @@
-import {PartialContext} from "@builder/partial/PartialContext";
-import {PartialDefinition} from "@builder/partial/types";
+import {PartialContext} from '@builder/partial/PartialContext.js';
+import {PartialDefinition} from '@builder/partial/types.js';
+import {ObjectBody} from '@builder/filebuilder/body/ObjectBody.ts';
 
 export default function (context: PartialContext): PartialDefinition {
     return {
@@ -13,11 +14,29 @@ export default function (context: PartialContext): PartialDefinition {
             utils.loadRecursive('files', '/');
         },
         buildFiles: async (fs, fb) => {
-            await fb('bashly.yml').setSourceDir('/bin/_env/src').build();
             await fb('.gitignore').setSourceDir('/').build();
             await fb('.env.tpl').setSourceDir('/').build();
             await fb('Dockerfile').setSpecial('dockerfile').build();
             await fb('docker-compose.yml').setSpecial('dockerCompose').build();
+            await fb('_env/package.json').setSourceDir('/bin/').build();
+
+            // We MUST generate this file dynamically, otherwise the IDE gets confused in the partial directory
+            await fb('_env/tsconfig.json')
+                .setDestinationDir('/bin/')
+                .setBodyFactory(() => new ObjectBody({
+                    compilerOptions: {
+                        target: 'esnext',
+                        module: 'Preserve',
+                        moduleResolution: 'node',
+                        allowImportingTsExtensions: true,
+                        noEmit: true,
+                        paths: {
+                            '/*': ['./core/*'],
+                            '@/*': ['./core/*']
+                        }
+                    }
+                }))
+                .build();
         }
-    }
+    };
 }

@@ -4,11 +4,18 @@
     "./partials/**/*.ts",
   ],
   "compilerOptions": {
+    "baseUrl": ".",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./out/bin/_env/node_modules/@types",
+    ],
     "paths": {
-      "@builder/*": ["./builder/*"]
+      "@builder/*": ["./builder/*"],
+      "@/*": ["./partials/root/files/bin/_env/core/*"],
+      "commander": ["./out/bin/_env/node_modules/commander"],
+      "glob": ["./out/bin/_env/node_modules/glob"]
     },
-    "moduleDetection": "force",
-    "module": "Preserve",
+    "module": "esnext",
     "resolveJsonModule": true,
     "allowJs": true,
     "esModuleInterop": true,
@@ -16,6 +23,7 @@
     "noImplicitAny": true,
     "strictNullChecks": true,
     "moduleResolution": "node",
-    "target": "ESNext"
+    "target": "esnext",
+    "allowImportingTsExtensions": true
   }
 }

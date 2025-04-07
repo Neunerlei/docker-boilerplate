@@ -49,7 +49,7 @@ export class PartialContext {
     }
 
     public isSelectedPartial(key: string): boolean {
-        return this._buildContext.getPartialRegistry().has(key);
+        return this._buildContext.getPartialStack().has(key);
     }
 
     public getSelectedPartials(): string[] {

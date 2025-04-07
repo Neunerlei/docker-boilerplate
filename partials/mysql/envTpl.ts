@@ -1,7 +1,7 @@
-import {StringBody} from "@builder/filebuilder/body/StringBody";
-import {FileBuilderCallback} from "@builder/partial/types";
+import {StringBody} from '@builder/filebuilder/body/StringBody';
+import type {BodyBuilder} from '@builder/partial/types';
 
-export const envTpl: FileBuilderCallback<StringBody> = async function (body) {
+export const envTpl: BodyBuilder<StringBody> = async function (body) {
     body.append(`
 # Mysql
 # ==========================
@@ -27,5 +27,5 @@ MYSQL_PORT=3306
 # MYSQL_SSH_USER_PROD=username
 # MYSQL_SSH_IDENTITY_FILE_PROD=~/.ssh/identity.pem
 # ==========================
-`, true)
-}
+`, true);
+};

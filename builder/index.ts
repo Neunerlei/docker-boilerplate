@@ -1,9 +1,9 @@
-import {PartialRegistry} from "./partial/PartialRegistry";
-import {PartialStack} from "./partial/PartialStack";
-import {Paths} from "./util/Paths";
-import {BuildContext} from "./util/BuildContext";
-import PrettyError from "pretty-error";
-import {memfs} from "memfs";
+import {PartialRegistry} from './partial/PartialRegistry';
+import {PartialStack} from './partial/PartialStack';
+import {Paths} from './util/Paths';
+import {BuildContext} from './util/BuildContext';
+import PrettyError from 'pretty-error';
+import {memfs} from 'memfs';
 import {RecursiveRequirementsResolver} from './partial/RecursiveRequirementsResolver';
 import {doRegisterAvailablePartials} from './actions/doRegisterAvailablePartials';
 import {doAddRootPartialToStack} from './actions/doAddRootPartialToStack';
@@ -11,9 +11,9 @@ import {askForAtLeastOneStandalonePartial} from './actions/askForAtLeastOneStand
 import {askForAdditionalPartials} from './actions/askForAdditionalPartials';
 import {PartialDefinition} from './partial/types';
 import {doDumpFilesToOutput} from './actions/doDumpFilesToOutput';
-import {doBuildBashly} from './actions/doBuildBashly';
 import {FsUtils} from './util/FsUtils';
 import {doBuildFiles} from './actions/doBuildFiles';
+import {doFinalizeEnvScript} from './actions/doFinalizeEnvScript';
 
 await (async function index() {
     try {
@@ -34,13 +34,13 @@ await (async function index() {
             for (const partial of partials) {
                 await fn(partial);
             }
-        }
+        };
 
         const callIfSet = async (partial: PartialDefinition, key: keyof PartialDefinition, ...args: any[]) => {
             if (typeof partial[key] === 'function') {
                 await partial[key].apply(partial[key], args);
             }
-        }
+        };
 
         await runForEachPartial((partial) => callIfSet(partial, 'init'));
         await runForEachPartial((partial) => callIfSet(partial, 'loadFiles', fs, new FsUtils(fs)));
@@ -49,7 +49,7 @@ await (async function index() {
         await runForEachPartial((partial) => callIfSet(partial, 'applyPost'));
 
         doDumpFilesToOutput(fs, paths);
-        doBuildBashly(paths);
+        doFinalizeEnvScript(paths);
 
         process.exit(0);
     } catch (e) {
@@ -60,4 +60,4 @@ await (async function index() {
         console.log((new PrettyError()).render(e));
         process.exit(1);
     }
-})()
+})();

@@ -3,4 +3,4 @@ DOCKER_UID="$(id -u)" DOCKER_GID="$(id -g)" docker compose \
     --rm \
     -ti \
     builder \
-    bash -c "npm run build"
+    bash -c "npm run build --no-update-notifier"

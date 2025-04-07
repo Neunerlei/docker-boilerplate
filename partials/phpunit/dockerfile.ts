@@ -1,16 +1,17 @@
-import {FileBuilderCallback} from '@builder/partial/types';
 import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
+import type {BodyBuilder} from '@builder/partial/types';
 
-export const dockerfile: FileBuilderCallback<DockerfileBody> = async (body) => {
+export const dockerfile: BodyBuilder<DockerfileBody> = async (body) => {
     body
         .get('php')
         .getDev()
         .addAfter('run.xdebug', 'run.addSudo', `
 # Install xdebug
-RUN --mount=type=cache,id=apk-cache,target=/var/cache/apk rm -rf /etc/apk/cache && ln -s /var/cache/apk /etc/apk/cache && \\
-apk update && apk upgrade && apk add --no-cache $PHPIZE_DEPS \\
-&& apk add --update linux-headers \\
-&& pecl install xdebug-3.4.1 \\
-&& docker-php-ext-enable xdebug
-`)
-}
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \\
+    apt-get update && apt-get upgrade -y \\
+    && apt-get install -y $PHPIZE_DEPS \\
+    && pecl install xdebug-3.4.1 \\
+    && docker-php-ext-enable xdebug
+`);
+};

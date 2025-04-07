@@ -1,8 +1,8 @@
-import {IFs} from "memfs";
-import * as fs from "fs";
-import * as path from "path";
-import {PartialContext} from "../partial/PartialContext";
-import {askForAlternativeAppSourcesDirectory} from "../actions/askForAlternativeAppSourcesDirectory";
+import {IFs} from 'memfs';
+import * as fs from 'fs';
+import * as path from 'path';
+import {PartialContext} from '../partial/PartialContext';
+import {askForAlternativeAppSourcesDirectory} from '../actions/askForAlternativeAppSourcesDirectory';
 
 export class FsUtils {
     private _fs: IFs;
@@ -45,7 +45,7 @@ export class FsUtils {
         let targetPath = partialContext.getAppSourcesDirectory();
         if (targetPath === '/app' && !partialContext.isMainPartial()) {
             const realTargetPath = await askForAlternativeAppSourcesDirectory(partialContext.getKey());
-            targetPath = path.join('/', realTargetPath);
+            targetPath = path.join('/', realTargetPath.replace(/^\//, ''));
             partialContext.getBuildContext().setPartialDir(partialContext.getKey(), targetPath);
         }
         this.loadRecursive(dirPath, targetPath);

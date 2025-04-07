@@ -1,5 +1,4 @@
-import {FileBuilderCallback} from "../partial/types";
-import {AbstractBody} from "./body/AbstractBody";
+import {AbstractBody} from './body/AbstractBody';
 import {BuildContext} from '../util/BuildContext';
 import {StringBody} from './body/StringBody';
 import {ObjectBody} from './body/ObjectBody';
@@ -8,8 +7,10 @@ import {DockerComposeBody} from './body/DockerComposeBody';
 import path from 'path';
 import {parse as parseYaml, stringify as stringifyYaml} from 'yaml';
 import {NginxBody} from './body/NginxBody';
+import {EntrypointBody} from './body/EntrypointBody';
+import {BodyBuilderCollector, type BodyBuilderState} from './BodyBuilderCollector';
 
-export interface FileBuilderBodyConfig {
+export interface FileBuilderBodyFactoryConfig {
     filename: string;
     content?: any;
 }
@@ -20,19 +21,22 @@ export type FileBuilderBodySaver<T = AbstractBody> = (args: {
     body: T,
     context: BuildContext
 }) => Promise<void>;
-export type FileBuilderBodyBuilder = (config: FileBuilderBodyConfig) => AbstractBody;
+export type FileBuilderBodyFactory = (config: FileBuilderBodyFactoryConfig) => AbstractBody;
 export type FileBuilderParser = 'json' | 'yaml' | 'string';
 
 const specialFactories = {
     dockerfile: (context: BuildContext) => new DockerfileBody(context),
     dockerCompose: (context: BuildContext) => new DockerComposeBody(context),
-    nginx: (context: BuildContext) => new NginxBody(context)
-}
+    nginx: (context: BuildContext) => new NginxBody(context),
+    entrypoint: (_: BuildContext, content: any) => new EntrypointBody(content ?? '')
+};
+
+let bodyBuilderState: BodyBuilderState | undefined;
 
 export class FileBuilder {
     private readonly _filename: string;
     private readonly _context: BuildContext;
-    private _bodyBuilder: FileBuilderBodyBuilder;
+    private _bodyFactory: FileBuilderBodyFactory;
     private _parser: FileBuilderParser = 'string';
     private _sourceDir: string | undefined;
     private _destinationDir: string | undefined;
@@ -128,10 +132,10 @@ export class FileBuilder {
     /**
      * A custom factory function that is used to build the body of the file.
      * This can be used if you want to extend
-     * @param builder
+     * @param factory
      */
-    public setBodyBuilder(builder: FileBuilderBodyBuilder): this {
-        this._bodyBuilder = builder;
+    public setBodyFactory(factory: FileBuilderBodyFactory): this {
+        this._bodyFactory = factory;
         return this;
     }
 
@@ -152,7 +156,7 @@ export class FileBuilder {
     private buildSpecialBody(): AbstractBody | undefined {
         if (this._special) {
             if (specialFactories[this._special]) {
-                return specialFactories[this._special](this._context);
+                return specialFactories[this._special](this._context, this._content);
             }
 
             throw new Error(`Unknown special file type: ${this._special}`);
@@ -160,12 +164,11 @@ export class FileBuilder {
     }
 
     private buildBodyWithContent(content: any): AbstractBody {
-        if (typeof this._bodyBuilder === 'function') {
-            const config: FileBuilderBodyConfig = {
+        if (typeof this._bodyFactory === 'function') {
+            return this._bodyFactory({
                 filename: this._filename,
                 content
-            }
-            return this._bodyBuilder(config);
+            });
         }
 
         if (typeof content === 'object') {
@@ -201,39 +204,39 @@ export class FileBuilder {
     }
 
     private async populateBody(body: AbstractBody) {
-        const before: FileBuilderCallback[] = [];
-        const build: FileBuilderCallback[] = [];
-        const after: FileBuilderCallback[] = [];
-
         const buildContext = this._context;
 
-        for (const key of await buildContext.getPartialStack().getSortedKeys()) {
-            const partial = buildContext.getPartialRegistry().get(key);
-            let builder = partial?.fileBuilder?.[this._filename];
-            if (builder === undefined) {
-                continue;
-            }
-
-            if (typeof builder === 'function') {
-                builder = {build: builder};
-            }
-
-            if (typeof builder.before === 'function') {
-                before.push(builder.before);
-            }
-            if (typeof builder.build === 'function') {
-                build.push(builder.build);
-            }
-            if (typeof builder.after === 'function') {
-                after.push(builder.after);
-            }
+        const builders = (await this.getResolvedBodyBuilders())?.get(this._filename);
+        if (!builders) {
+            return;
         }
 
-        const stack = [...before, ...build, ...after];
+        const stack = [...builders.before, ...builders.default, ...builders.after];
 
         for (const fn of stack) {
             await fn(body, this._filename, buildContext);
         }
+    }
+
+    private async getResolvedBodyBuilders() {
+        if (bodyBuilderState) {
+            return bodyBuilderState;
+        }
+
+        const state: BodyBuilderState = new Map();
+        const collector = new BodyBuilderCollector(state);
+
+        for (const partialKey of await this._context.getPartialStack().getSortedKeys()) {
+            const partial = this._context.getPartialRegistry().get(partialKey);
+            if (typeof partial?.bodyBuilders !== 'function') {
+                continue;
+            }
+
+            await partial?.bodyBuilders(collector);
+        }
+
+        bodyBuilderState = state;
+        return state;
     }
 
     private persistBody(body: AbstractBody) {
@@ -244,7 +247,7 @@ export class FileBuilder {
         const outputParser = body.outputParser?.() || this._parser || 'string';
         const value = body.getValue();
 
-        let content = '';
+        let content;
         if (outputParser === 'json') {
             content = JSON.stringify(value, null, 2);
         } else if (outputParser === 'yaml') {

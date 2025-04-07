@@ -14,25 +14,29 @@ export class DockerfileBody extends AbstractBody {
         this._context = context;
     }
 
-    public add(serviceName: string): ServiceSection {
-        serviceName = this._context.getRealPartialKey(serviceName);
-        if (this._services[serviceName]) {
-            throw new Error(`Service ${serviceName} already exists`);
+    public add(serviceNameOrPartialKey: string): ServiceSection {
+        serviceNameOrPartialKey = this._context.getRealPartialKey(serviceNameOrPartialKey);
+        if (this._services[serviceNameOrPartialKey]) {
+            throw new Error(`Service ${serviceNameOrPartialKey} already exists`);
         }
-        return this._services[serviceName] = new ServiceSection(serviceName);
+        return this._services[serviceNameOrPartialKey] = new ServiceSection(serviceNameOrPartialKey);
     }
 
-    public has(serviceName: string): boolean {
-        serviceName = this._context.getRealPartialKey(serviceName);
-        return Boolean(this._services[serviceName]);
+    public has(serviceNameOrPartialKey: string): boolean {
+        serviceNameOrPartialKey = this._context.getRealPartialKey(serviceNameOrPartialKey);
+        return Boolean(this._services[serviceNameOrPartialKey]);
     }
 
-    public get(serviceName: string): ServiceSection {
-        serviceName = this._context.getRealPartialKey(serviceName);
-        if (!this._services[serviceName]) {
-            throw new Error(`Service ${serviceName} does not exist`);
+    public get(serviceNameOrPartialKey: string): ServiceSection {
+        serviceNameOrPartialKey = this._context.getRealPartialKey(serviceNameOrPartialKey);
+        if (!this._services[serviceNameOrPartialKey]) {
+            throw new Error(`Service ${serviceNameOrPartialKey} does not exist`);
         }
-        return this._services[serviceName];
+        return this._services[serviceNameOrPartialKey];
+    }
+
+    public getApp(): ServiceSection {
+        return this.get(this._context.getAppPartialKey());
     }
 
     public getForContext(context: PartialContext): ServiceSection {

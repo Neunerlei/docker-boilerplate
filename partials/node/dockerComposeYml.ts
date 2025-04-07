@@ -1,10 +1,10 @@
-import {FileBuilderCallback} from '@builder/partial/types';
+import {type BodyBuilder} from '@builder/partial/types';
 import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
 
-export function dockerComposeYml(handlesWebTraffic: boolean): FileBuilderCallback<DockerComposeBody> {
+export function dockerComposeYml(handlesWebTraffic: boolean): BodyBuilder<DockerComposeBody> {
     return async (body, _, context) => {
         const key = context.getRealPartialKey('node');
-        const appSource = context.getPartialDir('node')
+        const appSource = context.getPartialDir('node');
 
         const service: Record<any, any> = {
             container_name: '${PROJECT_NAME}-' + key,
@@ -37,9 +37,9 @@ export function dockerComposeYml(handlesWebTraffic: boolean): FileBuilderCallbac
             };
             service.ports = [
                 '${DOCKER_PROJECT_IP:-127.0.0.1}:8000:8000'
-            ]
+            ];
         }
 
         body.setService('node', service);
-    }
+    };
 }
