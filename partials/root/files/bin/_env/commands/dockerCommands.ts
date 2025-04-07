@@ -2,6 +2,7 @@ import type {CommandEntrypoint} from '@/types.js';
 import {DockerContext} from './docker/DockerContext.js';
 import {DockerConfig} from './docker/DockerConfig.js';
 import type {Command} from 'commander';
+import {exec} from 'node:child_process';
 
 const commands: CommandEntrypoint = async function (program, context) {
     context.getConfig().registerAddon('docker', new DockerConfig());
@@ -90,6 +91,14 @@ const commands: CommandEntrypoint = async function (program, context) {
         .allowExcessArguments(true)
         .allowUnknownOption(true)
         .action((_, command) => context.docker.ps(command.args));
+
+    program
+        .command('docker:open')
+        .alias('open')
+        .description('opens the current project in your browser.')
+        .action(() => {
+            exec(`open ${context.getConfig().docker.projectHost}`);
+        });
 };
 
 export default commands;
