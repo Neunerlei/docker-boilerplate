@@ -15,16 +15,15 @@ The script will guide you through the process of generating a boilerplate.
 
 ### What can you select?
 
-First you choose a base boilerplate, this is generally speaking the coding language and version you want to use.
+First you choose one or multiple languages (each language will be represented in its dedicated container),
+if available you can also choose a version of the language.
 Next you can select a list of addons, these are optional and can be used to add additional features to your boilerplate.
-Finally, (if your base boilerplate supports it) you can select a frontend addon. This addon will add a frontend to your
-boilerplate.
-A frontend is generally probably a node environment, but it could also be a static site generator.
+Languages and Addons can support each other, like php and node or php and mysql.
 
 ### What is the output?
 
 The output is a complete boilerplate, including a docker compose file, nginx configuration, php configuration, etc.
-There is also a complete cli tooling based on [bashly](https://bashly.dannyb.co/), which you can extend with your own
+There is also a complete cli tooling based on node.js, which you can extend with your own
 commands.
 
 I would recommend copying it into your project directory and then start working from there.
