@@ -1,5 +1,6 @@
 import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
 import type {BodyBuilder} from '@builder/partial/types';
+import {envMysqlDockerComposeEnvironmentSelfDefinition} from './envTpl.ts';
 
 export const dockerComposeYmlBefore: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
     body.setService('mysql', {
@@ -9,12 +10,7 @@ export const dockerComposeYmlBefore: BodyBuilder<DockerComposeBody> = async (bod
             '--default-authentication-plugin=mysql_native_password',
             '--max_connections=2000'
         ],
-        environment: {
-            MYSQL_ROOT_PASSWORD: '$MYSQL_ROOT_PASSWORD',
-            MYSQL_DATABASE: '$MYSQL_DB_NAME',
-            MYSQL_USER: '$MYSQL_USER',
-            MYSQL_PASSWORD: '$MYSQL_PASSWORD'
-        },
+        environment: envMysqlDockerComposeEnvironmentSelfDefinition(),
         ulimits: {
             nofile: {
                 soft: 65536,
@@ -29,9 +25,7 @@ export const dockerComposeYmlBefore: BodyBuilder<DockerComposeBody> = async (bod
             '${DOCKER_PROJECT_IP:-127.0.0.1}:${MYSQL_PORT:-3306}:3306'
         ]
     });
-};
 
-export const dockerComposeYmlModify: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
     body.merge({
         volumes: {
             mysql_data: {
@@ -39,11 +33,4 @@ export const dockerComposeYmlModify: BodyBuilder<DockerComposeBody> = async (bod
             }
         }
     });
-
-    const appKey = context.getAppPartialKey();
-    if (body.hasService(appKey)) {
-        body.mergeService(appKey, {
-            depends_on: ['mysql']
-        });
-    }
 };

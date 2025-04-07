@@ -74,7 +74,18 @@ RUN --mount=type=bind,from=composer:2,source=/usr/bin/composer,target=/usr/bin/c
     composer dump-autoload --no-dev --optimize --no-interaction --verbose --no-scripts --no-cache
 `
             )
-            .add('user.root', 'USER root')
-        ;
-
+            .add('user.root', 'USER root');
     };
+
+export const dockerfileRedisAddon: BodyBuilder<DockerfileBody> = async (body) => {
+    const php = body.get('php').getRoot();
+
+    php.add('run.installRedis', `
+# Install redis extension
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked\\
+    --mount=type=bind,from=mlocati/php-extension-installer:1.5,source=/usr/bin/install-php-extensions,target=/usr/local/bin/install-php-extensions \\
+    install-php-extensions \\
+    redis
+`);
+};

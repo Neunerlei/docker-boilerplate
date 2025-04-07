@@ -1,5 +1,7 @@
 import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
 import type {BodyBuilder} from '@builder/partial/types.ts';
+import {envRedisDockerComposeEnvironmentDefinition} from '../redis/envTpl.ts';
+import {envMysqlDockerComposeEnvironmentDefinition} from '../mysql/envTpl.ts';
 
 export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
     body.merge({
@@ -48,5 +50,19 @@ export const dockerComposeYmlNginxShare: BodyBuilder<DockerComposeBody> = async 
         volumes: [
             '.' + context.getPartialDir('php') + '/public:/var/www/html/public'
         ]
+    });
+};
+
+export const dockerComposeYmlRedisAddon: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
+    body.mergeService('php', {
+        depends_on: ['redis'],
+        environment: envRedisDockerComposeEnvironmentDefinition()
+    });
+};
+
+export const dockerComposeYmlMysqlAddon: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
+    body.mergeService('php', {
+        depends_on: ['mysql'],
+        environment: envMysqlDockerComposeEnvironmentDefinition()
     });
 };
