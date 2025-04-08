@@ -8,21 +8,28 @@ import {getPrettyHelpHeader, showNiceIntro} from './ui.js';
 import {globSync} from 'glob';
 import {makeConfig} from './Config.js';
 import {makeEnvFile} from './EnvFile.js';
+import {makePlatform} from './Platform.ts';
+import {EventBus} from './EventBus.ts';
 
 export async function buildProgramm(
     paths: Paths
 ): Promise<Command> {
+    const events = new EventBus();
     const pkg = readPackageJson(paths);
     const env = await makeEnvFile(paths);
     const config = makeConfig(env, paths);
     const flags = new WritableFlags();
+    const platform = makePlatform();
 
     const context = new Context(
         pkg,
+        env,
         paths,
         program,
         flags,
-        config
+        config,
+        platform,
+        events
     );
 
     const inheritFlagsFromOpts = () => {

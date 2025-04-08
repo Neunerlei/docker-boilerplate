@@ -2,26 +2,40 @@ import {type Command} from 'commander';
 import type {Paths} from './Paths.ts';
 import type {EnvPackageInfo} from './types.ts';
 import type {Config} from './Config.js';
+import type {Platform} from './Platform.ts';
+import type {EnvFile} from './EnvFile.ts';
+import {Installer} from './installer/Installer.ts';
+import type {EventBus} from './EventBus.ts';
 
 export class Context {
     private readonly _pkg: EnvPackageInfo;
+    private readonly _env: EnvFile;
     private readonly _paths: Paths;
     private readonly _program: Command;
     private readonly _flags: WritableFlags;
-    private _config: Config;
+    private readonly _config: Config;
+    private readonly _platform: Platform;
+    private readonly _events: EventBus;
+    private _installer?: Installer;
 
     public constructor(
         pkg: EnvPackageInfo,
+        env: EnvFile,
         paths: Paths,
         program: Command,
         flags: WritableFlags,
-        config: Config
+        config: Config,
+        platform: Platform,
+        events: EventBus
     ) {
         this._pkg = pkg;
+        this._env = env;
         this._paths = paths;
         this._program = program;
         this._flags = flags;
         this._config = config;
+        this._platform = platform;
+        this._events = events;
     }
 
     public get flags(): ReadOnlyFlags {
@@ -30,6 +44,10 @@ export class Context {
 
     public getPkg(): EnvPackageInfo {
         return this._pkg;
+    }
+
+    public getEnv(): EnvFile {
+        return this._env;
     }
 
     public getPaths(): Paths {
@@ -42,6 +60,21 @@ export class Context {
 
     public getConfig(): Config {
         return this._config;
+    }
+
+    public getPlatform(): Platform {
+        return this._platform;
+    }
+
+    public getInstaller(): Installer {
+        if (!this._installer) {
+            this._installer = new Installer(this);
+        }
+        return this._installer;
+    }
+
+    public getEvents(): EventBus {
+        return this._events;
     }
 
     public registerAddon(key: string, addon: object) {

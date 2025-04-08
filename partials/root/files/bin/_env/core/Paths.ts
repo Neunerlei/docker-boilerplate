@@ -10,6 +10,8 @@ export class Paths {
     public readonly envFilePath: string;
     public readonly envFileTemplatePath: string;
     public readonly configFilePath: string;
+    public readonly envHomeDir: string;
+    public readonly certsDir: string;
 
     public constructor(
         scriptDir: string,
@@ -18,7 +20,9 @@ export class Paths {
         commandPaths: string[],
         envFilePath: string,
         envFileTemplatePath: string,
-        configFilePath: string
+        configFilePath: string,
+        envHomeDir: string,
+        certsDir: string
     ) {
         this.scriptDir = scriptDir;
         this.envDir = envDir;
@@ -27,6 +31,8 @@ export class Paths {
         this.envFilePath = envFilePath;
         this.envFileTemplatePath = envFileTemplatePath;
         this.configFilePath = configFilePath;
+        this.envHomeDir = envHomeDir;
+        this.certsDir = certsDir;
     }
 }
 
@@ -57,6 +63,14 @@ export function makePaths(
     }
     const projectDir = process.env.PROJECT_DIR;
 
+    if (!process.env.ENV_HOME) {
+        throw new Error('ENV_HOME is not defined');
+    }
+    if (!fs.existsSync(process.env.ENV_HOME)) {
+        throw new Error(`ENV_HOME does not exist: ${process.env.ENV_HOME}`);
+    }
+    const envHomeDir = process.env.ENV_HOME;
+
     commandPaths = commandPaths || [];
     commandPaths = commandPaths.map((p) => path.resolve(envDir, p));
     const builtInCommandsPath = path.resolve(envDir, 'commands');
@@ -67,6 +81,7 @@ export function makePaths(
     const envFilePath = path.resolve(projectDir, '.env');
     const envFileTemplatePath = path.resolve(projectDir, '.env.tpl');
     const configFilePath = path.resolve(projectDir, 'env.config.json');
+    const certsDir = path.resolve(projectDir, 'docker/certs');
 
     return new Paths(
         scriptDir,
@@ -75,6 +90,8 @@ export function makePaths(
         commandPaths,
         envFilePath,
         envFileTemplatePath,
-        configFilePath
+        configFilePath,
+        envHomeDir,
+        certsDir
     );
 }

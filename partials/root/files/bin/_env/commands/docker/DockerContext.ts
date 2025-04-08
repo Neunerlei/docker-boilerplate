@@ -317,6 +317,7 @@ export class DockerContext {
         }
         args.add('--remove-orphans');
 
+        await this._context.getEvents().trigger('docker:up:before', {args});
         await this.executeComposeCommand(['up', ...args]);
     }
 

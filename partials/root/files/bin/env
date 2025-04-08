@@ -8,13 +8,17 @@ set -e  # Exit on error
 # Node.js version to use
 # See what is currently available at https://nodejs.org/en/download
 NODE_VERSION="22.14.0"
+# Central storage for everything this script needs to store
+ENV_HOME="${HOME}/.bin-env"
 # Central storage location for Node.js binaries
-NODE_HOME="${HOME}/.node-env"
+NODE_DIR="${ENV_HOME}/node"
 # Shared npm cache directory
-NPM_CACHE_DIR="${NODE_HOME}/npm-cache"
+NPM_CACHE_DIR="${ENV_HOME}/npm-cache"
+# The directory of this script
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# The directory where the node.js sources of this script are stored
 ENV_DIR="${SCRIPT_DIR}/_env"
-# Project directory
+# Project directory (this is the parent directory of the script)
 PROJECT_DIR="$(realpath "$SCRIPT_DIR/..")"
 # Print debug messages
 VERBOSE=0
@@ -67,7 +71,12 @@ calculate_file_hash() {
 check_dependencies() {
   MISSING_CURL_WGET=0
   MISSING_TAR=0
-  
+
+  # Check if our home directory exists and is writable
+  if [ ! -d "$ENV_HOME" ]; then
+    mkdir -p "$ENV_HOME"
+  fi
+
   # Check for download tools
   if ! command_exists curl && ! command_exists wget; then
     MISSING_CURL_WGET=1
@@ -182,13 +191,20 @@ get_system_info() {
     arm64|aarch64) ARCH="arm64";;
     *)            error "Unsupported architecture: $(uname -m)";;
   esac
+
+  # Check if running in WSL
+  if [ -f /proc/version ] && grep -q "Microsoft" /proc/version; then
+    WSL=1
+  else
+    WSL=0
+  fi
 }
 
 set_node_paths() {
   # Set Node.js download URL and binary path
   NODE_DOWNLOAD_URL="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-${OS}-${ARCH}.tar.gz"
   NODE_DIRNAME="node-v${NODE_VERSION}-${OS}-${ARCH}"
-  NODE_BIN_DIR="${NODE_HOME}/${NODE_DIRNAME}/bin"
+  NODE_BIN_DIR="${NODE_DIR}/${NODE_DIRNAME}/bin"
   NODE_BIN="${NODE_BIN_DIR}/node"
   NPM_BIN="${NODE_BIN_DIR}/npm"
 }
@@ -247,7 +263,7 @@ setup_node() {
   echo "Setting up Node.js v${NODE_VERSION}..."
 
   # Create directories
-  mkdir -p "$NODE_HOME"
+  mkdir -p "$NODE_DIR"
 
   # Download Node.js
   TEMP_DIR=$(mktemp -d)
@@ -258,7 +274,7 @@ setup_node() {
 
   # Extract Node.js
   echo "Extracting Node.js..."
-  tar -xzf "$DOWNLOAD_FILE" -C "$NODE_HOME"
+  tar -xzf "$DOWNLOAD_FILE" -C "$NODE_DIR"
 
   # Verify extraction succeeded
   if [ ! -x "$NODE_BIN" ]; then
@@ -372,7 +388,11 @@ TSX_PATH="${ENV_DIR}/node_modules/.bin/tsx"
 INDEX_PATH="${ENV_DIR}/index.ts"
 export PATH="$NODE_BIN_DIR:$PATH"
 export PROJECT_DIR="$PROJECT_DIR"
-export SCRIPT_DIR="$SCRIPT_DIR"
+export ENV_HOME="$ENV_HOME"
 export ENV_DIR="$ENV_DIR"
+export SCRIPT_DIR="$SCRIPT_DIR"
+export HOST_OS="$OS"
+export HOST_ARCH="$ARCH"
+export HOST_IS_WSL="$WSL"
 cd "$ENV_DIR"
 "$NODE_BIN" "$TSX_PATH" "$INDEX_PATH" "$@"

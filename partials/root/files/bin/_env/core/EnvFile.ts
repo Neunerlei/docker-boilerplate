@@ -1,24 +1,38 @@
 import type {Paths} from './Paths.js';
 import * as fs from 'node:fs';
 import {confirm, input} from '@inquirer/prompts';
-import {parse as parseEnv} from 'dotenv';
 import * as path from 'node:path';
 
 let loadedEnvFile: EnvFile | undefined = undefined;
 
-export class EnvFile {
-    private readonly _values: Map<string, string>;
+interface EnvFileState {
+    filename: string;
+    values: Map<string, string>;
+    tpl: string;
+}
 
-    public constructor(values: Map<string, string>) {
-        this._values = values;
+export class EnvFile {
+    private readonly _state: EnvFileState;
+
+    public constructor(state: EnvFileState) {
+        this._state = state;
     }
 
     public get(key: string, fallback?: string): string | undefined {
-        return this._values.get(key) || fallback;
+        return this._state.values.get(key) || fallback;
     }
 
     public has(key: string): boolean {
-        return this._values.has(key);
+        return this._state.values.has(key);
+    }
+
+    public set(key: string, value: string): this {
+        this._state.values.set(key, value);
+        return this;
+    }
+
+    public write(): void {
+        writeStateToFile(this._state);
     }
 }
 
@@ -37,32 +51,8 @@ export async function makeEnvFile(paths: Paths): Promise<EnvFile> {
         fs.copyFileSync(paths.envFileTemplatePath, paths.envFilePath);
     }
 
-    return loadedEnvFile = await ensureEnvFileContainsProjectName(loadEnvFile(paths), paths);
-}
+    const envFile = new EnvFile(loadEnvFileState(paths.envFilePath));
 
-export function getEnvValue(key: string, fallback?: string): string {
-    if (loadedEnvFile && loadedEnvFile.has(key)) {
-        return loadedEnvFile.get(key)!;
-    } else if (fallback) {
-        return fallback;
-    } else {
-        throw new Error(`Missing required env value: ${key}`);
-    }
-}
-
-function loadEnvFileContent(paths: Paths): string {
-    if (!fs.existsSync(paths.envFilePath)) {
-        throw new Error(`Env file does not exist: ${paths.envFilePath}`);
-    }
-
-    return fs.readFileSync(paths.envFilePath).toString('utf-8');
-}
-
-function loadEnvFile(paths: Paths): EnvFile {
-    return new EnvFile(new Map(Object.entries(parseEnv(loadEnvFileContent(paths)))));
-}
-
-async function ensureEnvFileContainsProjectName(envFile: EnvFile, paths: Paths) {
     if (!envFile.has('PROJECT_NAME') || envFile.get('PROJECT_NAME') === '' || envFile.get('PROJECT_NAME') === 'replace-me') {
         const projectName = await input({
             message: 'You need to define a project name, which can be used for your docker containers and generated urls. Please enter a project name:',
@@ -73,18 +63,101 @@ async function ensureEnvFileContainsProjectName(envFile: EnvFile, paths: Paths) 
             required: true
         });
 
-        let envContent = loadEnvFileContent(paths);
-        if (envContent.includes('PROJECT_NAME=replace-me')) {
-            envContent = envContent.replace('PROJECT_NAME=replace-me', `PROJECT_NAME=${projectName}`);
-        } else {
-            envContent += (envContent.length > 0 ? `\n` : '') + `PROJECT_NAME=${projectName}`;
-        }
-
-        fs.writeFileSync(paths.envFilePath, envContent);
-        return loadEnvFile(paths);
+        envFile.set('PROJECT_NAME', projectName);
+        envFile.write();
     }
 
-    return envFile;
+    return loadedEnvFile = envFile;
+}
+
+export function getEnvValue(key: string, fallback?: string): string {
+    if (loadedEnvFile && loadedEnvFile.has(key)) {
+        return loadedEnvFile.get(key)!;
+    } else if (process.env[key]) {
+        return process.env[key]!;
+    } else if (fallback) {
+        return fallback;
+    } else {
+        console.log(loadedEnvFile, key);
+        throw new Error(`Missing required env value: ${key}`);
+    }
+}
+
+function loadEnvFileState(filename: string): EnvFileState {
+    return {
+        filename,
+        ...parseFile(fs.readFileSync(filename).toString('utf-8'))
+    };
+}
+
+function parseFile(content: string): {
+    values: Map<string, string>;
+    tpl: string;
+} {
+    const lines = content.split(/\r?\n/);
+    const tpl: Array<string> = [];
+    const values = new Map();
+
+    // Iterate the lines
+    lines.forEach(line => {
+        let _line = line.trim();
+
+        // Skip comments and empty lines
+        if (_line.length === 0 || _line.charAt(0) === '#' || _line.indexOf('=') === -1) {
+            tpl.push(line);
+            return;
+        }
+
+        // Extract key value and store the line in the template
+        tpl.push(_line.replace(/^([^=]*?)(?:\s+)?=(?:\s+)?(.*?)(\s#|$)/, (_, key, value, comment) => {
+            // Prepare value
+            value = value.trim();
+            if (value.length === 0) {
+                value = null;
+            }
+
+            // Handle comment only value
+            if (typeof value === 'string' && value.charAt(0) === '#') {
+                comment = ' ' + value;
+                value = null;
+            }
+
+            key = key.trim();
+            if (values.has(key)) {
+                throw new Error('Invalid .env file! There was a duplicate key: ' + key);
+            }
+            values.set(key.trim(), value);
+            return '{{pair}}' + ((comment + '').trim().length > 0 ? comment : '');
+        }));
+    });
+
+    return {
+        values: values,
+        tpl: tpl.join('\n')
+    };
+}
+
+function writeStateToFile(state: EnvFileState): void {
+    // Build the content based on the template and the current storage
+    const keys: Array<string> = Array.from(state.values.keys());
+    let contents = state.tpl.replace(/{{pair}}/g, () => {
+        const key = keys.shift();
+        const value = state.values.get(key);
+        return key + '=' + value;
+    });
+
+    if (keys.length > 0) {
+        for (const key of keys) {
+            const value = state.values.get(key);
+            contents += '\n' + key + '=' + value;
+        }
+    }
+
+    // Remove all spacing at the top and bottom of the file
+    contents = contents.replace(/^\s+|\s+$/g, '');
+
+    // Write the file
+    fs.writeFileSync(state.filename, contents);
 }
 
 function extractProjectNameFromPath(paths: Paths): string {

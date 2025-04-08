@@ -6,8 +6,8 @@ export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, _, 
         image: 'nginx:1.27-alpine',
         container_name: '${PROJECT_NAME}-nginx',
         volumes: [
-            './docker/nginx/config/ssl:/etc/nginx/certs',
-            './docker/nginx/config/nginx.dev.conf:/etc/nginx/nginx.conf:ro'
+            './docker/certs:/etc/nginx/certs',
+            './docker/nginx/config/nginx.dev${DOCKER_PROJECT_SSL_MARKER:-}.conf:/etc/nginx/nginx.conf:ro'
         ],
         ports: [
             '${DOCKER_PROJECT_IP:-127.0.0.1}:80:80',
