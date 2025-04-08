@@ -142,7 +142,7 @@ function writeStateToFile(state: EnvFileState): void {
     const keys: Array<string> = Array.from(state.values.keys());
     let contents = state.tpl.replace(/{{pair}}/g, () => {
         const key = keys.shift();
-        const value = state.values.get(key);
+        const value = state.values.get(key + '');
         return key + '=' + value;
     });
 
