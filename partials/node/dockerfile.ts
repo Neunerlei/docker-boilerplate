@@ -8,7 +8,7 @@ export function dockerfile(context: PartialContext): BodyBuilder<DockerfileBody>
         const version = context.getVersion() ?? context.getDefinition().versions![0];
         const appSource = context.getBuildContext().getPartialDir(context.getKey());
 
-        const image = 'node:' + version + '-alpine';
+        const image = 'node:' + version + '-bookworm';
 
         node.setCommonRootInstructions(image);
 
@@ -25,22 +25,19 @@ export function dockerfile(context: PartialContext): BodyBuilder<DockerfileBody>
             .add('env.app_env', 'ENV APP_ENV=dev')
             .add('run.addBasics', `
 # Add basics
-RUN --mount=type=cache,id=apk-cache,target=/var/cache/apk rm -rf /etc/apk/cache && ln -s /var/cache/apk /etc/apk/cache && \\
-    apk update && apk upgrade && apk add \\
-    sudo \\
-    bash \\
-    curl
-
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \\
+    apt-get update && apt-get upgrade -y && apt-get install -y \\
+    sudo
 `)
             .add('run.recreateUser', `
 # Recreate the www-data user and group with the current users id
-RUN --mount=type=cache,id=apk-cache,target=/var/cache/apk rm -rf /etc/apk/cache && ln -s /var/cache/apk /etc/apk/cache && \\
-    apk update && apk upgrade && apk add shadow \\
-    && (deluser $(getent passwd \${DOCKER_UID} | cut -d: -f1) || true) \\
-    && (userdel -r www-data || true) \\
-    && (groupdel -f www-data || true) \\
-    && groupadd -g \${DOCKER_GID} www-data \\
-    && adduser -u \${DOCKER_UID} -D -S -G www-data www-data
+RUN (userdel -r $(getent passwd "\${DOCKER_UID}" | cut -d: -f1) || true) && \\
+    (groupdel -f $(getent group "\${DOCKER_GID}" | cut -d: -f1) || true) && \\
+    groupdel -f www-data || true && \\
+    userdel -r www-data || true && \\
+    groupadd -g \${DOCKER_GID} www-data && \\
+    useradd -u \${DOCKER_UID} -g www-data www-data
 `)
             .add('copy.entrypoint', 'COPY docker/node/node.entrypoint.dev.sh /usr/bin/app/boot.sh')
             .add('run.entrypointPermissions', 'RUN chmod +x /usr/bin/app/boot.sh')
