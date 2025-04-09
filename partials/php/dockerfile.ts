@@ -19,9 +19,9 @@ export const dockerfileFpmDebian: BodyBuilder<DockerfileBody> =
             .add('env.app_env', 'ENV APP_ENV=dev')
             .add('run.addSudo', `
 # Add sudo command
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get upgrade -y && apt-get install -y \
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \\
+    apt-get update && apt-get upgrade -y && apt-get install -y \\
     sudo
 `)
             .add('copy.addComposer', `
@@ -35,12 +35,12 @@ RUN rm -rf /usr/local/etc/php/conf.d/zzz.app.prod.ini
 `)
             .add('run.recreateUser', `
 # Recreate the www-data user and group with the current users id
-RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \
-    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \
-    apt-get update && apt-get install -y usermod && \
-    groupdel -f www-data || true && \
-    userdel -r www-data || true && \
-    groupadd -g \${DOCKER_GID} www-data && \
+RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
+    --mount=type=cache,id=apt-lib,target=/var/lib/apt,sharing=locked \\
+    apt-get update && apt-get install -y usermod && \\
+    groupdel -f www-data || true && \\
+    userdel -r www-data || true && \\
+    groupadd -g \${DOCKER_GID} www-data && \\
     useradd -u \${DOCKER_UID} -g www-data www-data
 `)
             .add('copy.entrypoint', 'COPY docker/php/php.entrypoint.dev.sh /user/bin/app/boot.local.sh')

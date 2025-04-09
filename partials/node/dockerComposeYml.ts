@@ -22,6 +22,10 @@ export function dockerComposeYml(handlesWebTraffic: boolean): BodyBuilder<Docker
             volumes: [
                 '.' + appSource + ':/var/www/html'
             ],
+            environment: [
+                'DOCKER_PROJECT_INSTALLED=${DOCKER_PROJECT_INSTALLED:-"false"}',
+                'DOCKER_PROJECT_DOMAIN=${DOCKER_PROJECT_DOMAIN:-localhost}'
+            ],
             extra_hosts: [
                 'host.docker.internal:host-gateway'
             ]

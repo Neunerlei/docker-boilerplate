@@ -373,6 +373,7 @@ if [ $NPM_DEV -eq 1 ]; then
     echo "Running npm dev command..."
   fi
   cd "$ENV_DIR"
+  export PATH="$NODE_BIN_DIR:$PATH"
   "$NPM_BIN" "$@"
   exit $?
 fi

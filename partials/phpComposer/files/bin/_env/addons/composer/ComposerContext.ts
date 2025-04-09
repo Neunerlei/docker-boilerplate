@@ -10,15 +10,15 @@ export class ComposerContext {
     }
 
     public get areComposerDependenciesInstalled(): boolean {
-        const autoloadPath = path.join(
-            this._context.getPaths().projectDir, '%PHP_PATH%', 'vendor', 'autoload.php');
+        const autoloadPath = path.join(this._context.paths.projectDir, '%PHP_PATH%', 'vendor', 'autoload.php');
         return fs.existsSync(autoloadPath);
     }
 
     public async exec(command: Array<string>): Promise<void> {
         await this._context.docker.executeCommandInService(
             '%PHP_SERVICE%',
-            ['composer', ...command]
+            ['composer', ...command],
+            {interactive: true}
         );
     }
 

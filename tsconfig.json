@@ -12,7 +12,6 @@
     "paths": {
       "@builder/*": ["./builder/*"],
       "@/*": ["./partials/root/files/bin/_env/core/*"],
-      "/*": ["./partials/root/files/bin/_env/core/*"],
       "commander": ["./out/bin/_env/node_modules/commander"],
       "glob": ["./out/bin/_env/node_modules/glob"],
       "chalk": ["./out/bin/_env/node_modules/chalk"],

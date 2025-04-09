@@ -1,115 +1,54 @@
-import {type Command} from 'commander';
+import {Command} from 'commander';
 import type {Paths} from './Paths.ts';
-import type {EnvPackageInfo} from './types.ts';
-import type {Config} from './Config.js';
 import type {Platform} from './Platform.ts';
-import type {EnvFile} from './EnvFile.ts';
-import {Installer} from './installer/Installer.ts';
+import type {EnvFile} from './env/EnvFile.ts';
 import type {EventBus} from './EventBus.ts';
+import type {PackageInfo} from './PackageInfo.ts';
+import type {CommonUi} from './CommonUi.ts';
 
-export class Context {
-    private readonly _pkg: EnvPackageInfo;
-    private readonly _env: EnvFile;
-    private readonly _paths: Paths;
-    private readonly _program: Command;
-    private readonly _flags: WritableFlags;
-    private readonly _config: Config;
-    private readonly _platform: Platform;
-    private readonly _events: EventBus;
-    private _installer?: Installer;
+export interface Context {
+    readonly ui: CommonUi;
+    readonly pkg: PackageInfo;
+    readonly paths: Paths;
+    readonly events: EventBus;
+    readonly env: EnvFile;
+    readonly program: Command;
+    readonly platform: Platform;
+}
 
-    public constructor(
-        pkg: EnvPackageInfo,
-        env: EnvFile,
-        paths: Paths,
-        program: Command,
-        flags: WritableFlags,
-        config: Config,
-        platform: Platform,
-        events: EventBus
-    ) {
-        this._pkg = pkg;
-        this._env = env;
-        this._paths = paths;
-        this._program = program;
-        this._flags = flags;
-        this._config = config;
-        this._platform = platform;
-        this._events = events;
-    }
+const targetProp = Symbol('targetProp');
 
-    public get flags(): ReadOnlyFlags {
-        return this._flags.getReadOnly();
-    }
-
-    public getPkg(): EnvPackageInfo {
-        return this._pkg;
-    }
-
-    public getEnv(): EnvFile {
-        return this._env;
-    }
-
-    public getPaths(): Paths {
-        return this._paths;
-    }
-
-    public getProgram(): Command {
-        return this._program;
-    }
-
-    public getConfig(): Config {
-        return this._config;
-    }
-
-    public getPlatform(): Platform {
-        return this._platform;
-    }
-
-    public getInstaller(): Installer {
-        if (!this._installer) {
-            this._installer = new Installer(this);
+export function createContext(events: EventBus, ui: CommonUi): Context {
+    return new Proxy({
+        events,
+        ui,
+        program: new Command()
+    } as Context, {
+        get(target, prop) {
+            if (prop === targetProp) {
+                return target;
+            }
+            if (prop in target) {
+                return target[prop];
+            }
+            throw new Error(`Property ${String(prop)} is not available in the context. Maybe you are to early?`);
         }
-        return this._installer;
-    }
+    });
+}
 
-    public getEvents(): EventBus {
-        return this._events;
-    }
-
-    public registerAddon(key: string, addon: object) {
-        Object.defineProperty(this, key, {
-            get: () => addon
+export function extendContext(context: Context, key: keyof Context, value: object | (() => object)): Context {
+    const target = (context as any)[targetProp];
+    if (typeof value === 'function') {
+        let _value: any;
+        Object.defineProperty(target, key, {
+            get() {
+                return _value ??= value();
+            },
+            enumerable: true,
+            configurable: true
         });
+    } else {
+        target[key] = value;
     }
-}
-
-export class ReadOnlyFlags {
-    protected _quiet: boolean;
-
-    public constructor(
-        quiet: boolean
-    ) {
-        this._quiet = quiet;
-    }
-
-    public get quiet() {
-        return this._quiet;
-    }
-}
-
-export class WritableFlags extends ReadOnlyFlags {
-    public constructor() {
-        super(
-            false
-        );
-    }
-
-    public set(key: string, value: any) {
-        (this as any)['_' + key] = value;
-    }
-
-    public getReadOnly(): ReadOnlyFlags {
-        return new ReadOnlyFlags(this._quiet);
-    }
+    return context;
 }

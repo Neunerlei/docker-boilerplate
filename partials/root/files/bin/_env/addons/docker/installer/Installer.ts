@@ -6,6 +6,7 @@ import {confirm} from '@inquirer/prompts';
 import chalk from 'chalk';
 import {DarwinInstaller} from './concrete/DarwinInstaller.ts';
 import {LinuxWslInstaller} from './concrete/LinuxWslInstaller.ts';
+import path from 'node:path';
 
 export class Installer {
     private readonly _context: Context;
@@ -14,20 +15,20 @@ export class Installer {
 
     constructor(context: Context) {
         this._context = context;
-        this._installer = context.getPlatform().choose({
+        this._installer = context.platform.choose({
             linux: new LinuxInstaller(),
             linuxWsl: new LinuxWslInstaller(),
             darwin: new DarwinInstaller()
         });
-        this._ip = new IpAddressStorage(this._context.getPaths().envHomeDir + '/next-ip.txt');
+        this._ip = new IpAddressStorage(path.join(this._context.paths.envHomeDir + 'next-ip.txt'));
     }
 
     public async install(): Promise<void> {
         console.log(`
-|    o        /o          |         |    |              
+|    o        /o          |         |    |
 |---..,---.  / .,---.,---.|--- ,---.|    |    ,---.,---.
-|   |||   | /  ||   |\`---.|    ,---||    |    |---'|    
-\`---'\`\`   '/   \`\`   '\`---'\`---'\`---^\`---'\`---'\`---'\`  
+|   |||   | /  ||   |\`---.|    ,---||    |    |---'|
+\`---'\`\`   '/   \`\`   '\`---'\`---'\`---^\`---'\`---'\`---'\`
 
 Hello! You are about to "install" the project on your computer.
 This is a one-time setup, so you can run this command once and forget about it.
@@ -52,37 +53,40 @@ What the script will do:
             return;
         }
 
-        await this._context.getEvents().trigger('installer:before', {installer: this._installer});
+        const {events, paths, docker} = this._context;
+        const installer = this._installer;
+
+        await events.trigger('installer:before', {installer: installer});
 
         console.log('Stopping running docker containers...');
-        await this._context.docker.down();
+        await docker.down();
 
-        await this._context.getEvents().trigger('installer:dependencies:before');
-        await this._installer.checkDependencies();
+        await events.trigger('installer:dependencies:before');
+        await installer.checkDependencies();
 
         const projectIp = this.getProjectIpAddress();
-        await this._context.getEvents().trigger('installer:loopbackIp:before', {ip: projectIp});
-        await this._installer.registerLoopbackIp(projectIp);
+        await events.trigger('installer:loopbackIp:before', {ip: projectIp});
+        await installer.registerLoopbackIp(projectIp);
 
         const projectDomain = this.getProjectDomain();
-        await this._context.getEvents().trigger('installer:domain:before', {domain: projectDomain, ip: projectIp});
-        await this._installer.registerDomainToIp(projectDomain, projectIp);
+        await events.trigger('installer:domain:before', {domain: projectDomain, ip: projectIp});
+        await installer.registerDomainToIp(projectDomain, projectIp);
 
-        await this._context.getEvents().trigger('installer:certificates:before');
-        await this._installer.buildCertificate(projectDomain, this._context.getPaths().projectDir + '/docker/certs');
+        await events.trigger('installer:certificates:before');
+        await installer.buildCertificate(projectDomain, path.join(paths.projectDir, 'docker', 'certs'));
 
         await this.updateEnvFile(projectIp, projectDomain);
         this._ip.persistNextIpAddress();
 
-        await this._context.getEvents().trigger('installer:after');
+        await events.trigger('installer:after');
 
         console.log('Bringing your project up...');
-        await this._context.docker.up();
+        await docker.up();
 
         console.log(chalk.green(`
 🥳 ${chalk.bold('Yay!')}
 
-Installation complete! 
+Installation complete!
 
 Your project ip address is: ${chalk.bold(projectIp)}
 Your project domain is: https://${chalk.bold(projectDomain)}
@@ -93,7 +97,7 @@ Open the url in your browser or call ${chalk.yellow.italic('bin/env open')}.
 
     public async ensureLoopbackIp(): Promise<void> {
         if (this._installer.requiresLoopbackMonitoring) {
-            const configuredIpAddress = this._context.getConfig().docker.projectIp;
+            const configuredIpAddress = this._context.docker.projectIp;
             if (configuredIpAddress !== '127.0.0.1') {
                 await this._installer.registerLoopbackIp(configuredIpAddress);
             }
@@ -101,7 +105,7 @@ Open the url in your browser or call ${chalk.yellow.italic('bin/env open')}.
     }
 
     private getProjectIpAddress(): string {
-        const configuredIpAddress = this._context.getConfig().docker.projectIp;
+        const configuredIpAddress = this._context.docker.projectIp;
         if (configuredIpAddress !== '127.0.0.1') {
             return configuredIpAddress;
         }
@@ -110,25 +114,25 @@ Open the url in your browser or call ${chalk.yellow.italic('bin/env open')}.
     }
 
     private getProjectDomain(): string {
-        const configuredDomain = this._context.getConfig().docker.projectDomain;
+        const configuredDomain = this._context.docker.projectDomain;
         if (configuredDomain !== 'localhost') {
             return configuredDomain;
         }
 
-        const domainSuffix = this._context.getConfig().docker.projectDomainSuffix;
+        const domainSuffix = this._context.docker.projectDomainSuffix;
 
-        return this._context.getConfig().docker.projectName + '.' + (domainSuffix).trim().replace(/^\./, '');
+        return this._context.docker.projectName + '.' + (domainSuffix).trim().replace(/^\./, '');
     }
 
     private async updateEnvFile(projectIp: string, projectDomain: string): Promise<void> {
-        const envFile = this._context.getEnv();
+        const envFile = this._context.env;
 
         envFile.set('DOCKER_PROJECT_INSTALLED', 'true')
             .set('DOCKER_PROJECT_IP', projectIp)
             .set('DOCKER_PROJECT_DOMAIN', projectDomain)
             .set('DOCKER_PROJECT_SSL_MARKER', '.ssl');
 
-        await this._context.getEvents().trigger('installer:envFile:filter', {envFile});
+        await this._context.events.trigger('installer:envFile:filter', {envFile});
 
         envFile.write();
     }

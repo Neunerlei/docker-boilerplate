@@ -37,7 +37,7 @@ export default function (context: PartialContext): PartialDefinition {
             // Replace the node container in the npm command
             replaceInFile(
                 fs,
-                '/bin/_env/commands/nodeCommands.ts',
+                '/bin/_env/addons/node.addon.ts',
                 '%NODE_SERVICE%',
                 context.getBuildContext().getRealPartialKey('node')
             );

@@ -1,4 +1,4 @@
-import {getEnvValue} from './EnvFile.ts';
+import process from 'node:process';
 
 interface PlatformDefinition {
     darwin?: any;
@@ -76,18 +76,18 @@ export class Platform {
     }
 }
 
-export function makePlatform(): Platform {
-    const os = getEnvValue('HOST_OS');
+export function createPlatform(): Platform {
+    const os = process.env.HOST_OS;
     if (os !== 'linux' && os !== 'darwin') {
         throw new Error(`Unsupported operating system: ${os}`);
     }
 
-    const arch = getEnvValue('HOST_ARCH');
+    const arch = process.env.HOST_ARCH;
     if (arch !== 'x64' && arch !== 'arm64') {
         throw new Error(`Unsupported architecture: ${arch}`);
     }
 
-    const isWsl = getEnvValue('HOST_IS_WSL') === '1';
+    const isWsl = process.env.HOST_IS_WSL === '1';
 
     return new Platform(os, arch, isWsl);
 }

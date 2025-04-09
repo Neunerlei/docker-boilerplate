@@ -6,8 +6,9 @@ export class Paths {
     public readonly scriptDir: string;
     public readonly envDir: string;
     public readonly projectDir: string;
-    public readonly commandPaths: string[];
+    public readonly addonPaths: string[];
     public readonly envFilePath: string;
+    public readonly envFileHashPath: string;
     public readonly envFileTemplatePath: string;
     public readonly configFilePath: string;
     public readonly envHomeDir: string;
@@ -17,8 +18,9 @@ export class Paths {
         scriptDir: string,
         envDir: string,
         projectDir: string,
-        commandPaths: string[],
+        addonPaths: string[],
         envFilePath: string,
+        envFileHashPath: string,
         envFileTemplatePath: string,
         configFilePath: string,
         envHomeDir: string,
@@ -27,8 +29,9 @@ export class Paths {
         this.scriptDir = scriptDir;
         this.envDir = envDir;
         this.projectDir = projectDir;
-        this.commandPaths = commandPaths;
+        this.addonPaths = addonPaths;
         this.envFilePath = envFilePath;
+        this.envFileHashPath = envFileHashPath;
         this.envFileTemplatePath = envFileTemplatePath;
         this.configFilePath = configFilePath;
         this.envHomeDir = envHomeDir;
@@ -36,9 +39,7 @@ export class Paths {
     }
 }
 
-export function makePaths(
-    commandPaths?: string[]
-): Paths {
+export function createPaths(): Paths {
     if (!process.env.SCRIPT_DIR) {
         throw new Error('SCRIPT_DIR is not defined');
     }
@@ -71,14 +72,9 @@ export function makePaths(
     }
     const envHomeDir = process.env.ENV_HOME;
 
-    commandPaths = commandPaths || [];
-    commandPaths = commandPaths.map((p) => path.resolve(envDir, p));
-    const builtInCommandsPath = path.resolve(envDir, 'commands');
-    if (!commandPaths.includes(builtInCommandsPath)) {
-        commandPaths.push(builtInCommandsPath);
-    }
-
+    const commandPaths = [envDir, path.resolve(envDir, 'addons')];
     const envFilePath = path.resolve(projectDir, '.env');
+    const envFileHashPath = path.resolve(envDir, '.env.hash');
     const envFileTemplatePath = path.resolve(projectDir, '.env.tpl');
     const configFilePath = path.resolve(projectDir, 'env.config.json');
     const certsDir = path.resolve(projectDir, 'docker/certs');
@@ -89,6 +85,7 @@ export function makePaths(
         projectDir,
         commandPaths,
         envFilePath,
+        envFileHashPath,
         envFileTemplatePath,
         configFilePath,
         envHomeDir,

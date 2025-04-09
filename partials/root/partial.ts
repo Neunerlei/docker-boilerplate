@@ -31,7 +31,6 @@ export default function (context: PartialContext): PartialDefinition {
                         allowImportingTsExtensions: true,
                         noEmit: true,
                         paths: {
-                            '/*': ['./core/*'],
                             '@/*': ['./core/*']
                         }
                     }

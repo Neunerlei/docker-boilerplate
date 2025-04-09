@@ -26,7 +26,7 @@ export default function (context: PartialContext): PartialDefinition {
 
             replaceInFile(
                 fs,
-                '/bin/_env/commands/composer/ComposerContext.ts',
+                '/bin/_env/addons/composer/ComposerContext.ts',
                 [
                     '%PHP_SERVICE%',
                     '%PHP_PATH%'

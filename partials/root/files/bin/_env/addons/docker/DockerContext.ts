@@ -1,13 +1,20 @@
 import type {Context} from '@/Context.ts';
 import {promisify} from 'util';
-import {exec, execSync, spawn} from 'node:child_process';
-import {confirm} from '@inquirer/prompts';
+import {exec, execSync} from 'node:child_process';
+import {confirm, select} from '@inquirer/prompts';
 import process from 'node:process';
+import {
+    executeCommand,
+    type ExecuteCommandOptions,
+    type ExecuteCommandResult,
+    type InteractiveCommandResult,
+    type InteractiveExecuteCommandOptions,
+    type NonInteractiveCommandResult,
+    type NonInteractiveExecuteCommandOptions
+} from '@/executeCommand.ts';
+import chalk from 'chalk';
 
 const execAsync = promisify(exec);
-
-// These are common exit codes for docker commands that are not errors
-const nonErrorExitCodes = [0, 130, 137, 140, 143];
 
 interface UpOptions {
     // Basically the opposite of -d, if true it will follow the output, by default it will run in detached mode
@@ -21,26 +28,89 @@ export class DockerContext {
     private _dockerExecutable: string | null = null;
     private _dockerComposeExecutable: string | null = null;
     private _dockerRuntimeType: ('podman' | 'docker') | null = null;
+    private _containerIdCache: Map<string, string> = new Map();
 
     constructor(context: Context) {
         this._context = context;
     }
 
+    public get isInstalled(): boolean {
+        return this._context.env.getGlobal('DOCKER_PROJECT_INSTALLED') === 'true';
+    }
+
+    public get defaultServiceName(): string {
+        return this._context.env.getGlobal('SERVICE_NAME', 'app')!;
+    }
+
+    public get defaultUid(): string {
+        return this._context.env.getGlobal('ENV_UID', '1000')!;
+    }
+
+    public get defaultGid(): string {
+        return this._context.env.getGlobal('ENV_GID', '1000')!;
+    }
+
+    public get projectDomainSuffix(): string {
+        return this._context.env.getGlobal('DOCKER_PROJECT_DOMAIN_SUFFIX', '.dev.local')!;
+    }
+
+    public get projectDomain(): string {
+        return this._context.env.getGlobal('DOCKER_PROJECT_DOMAIN', 'localhost')!;
+    }
+
+    public get projectIp(): string {
+        return this._context.env.getGlobal('DOCKER_PROJECT_IP', '127.0.0.1')!;
+    }
+
+    public get projectPort(): string {
+        return this._context.env.getGlobal('DOCKER_PROJECT_PORT', '80')!;
+    }
+
+    public get projectHost(): string {
+        const expectedPort = this.projectProtocol === 'http' ? '80' : '443';
+        const port = this.projectPort === expectedPort ? '' : `:${this.projectPort}`;
+        return `${this.projectProtocol}://${this.projectDomain}${port}`;
+    }
+
+    public get projectName(): string {
+        return this._context.env.getGlobalRequired('PROJECT_NAME');
+    }
+
+    public get projectProtocol(): string {
+        return this._context.env.getGlobal('DOCKER_PROJECT_PROTOCOL', 'http')!;
+    }
+
+    public get shellsToUse(): string[] {
+        return this._context.env.getGlobal('DOCKER_SHELLS_TO_USE', 'bash,sh,zsh,dash,ksh')!
+            .split(',')
+            .map((shell: string) => shell.trim());
+    }
+
+
+    public async executeDockerCommand(command: Array<string>, opt: NonInteractiveExecuteCommandOptions): Promise<NonInteractiveCommandResult>;
+    public async executeDockerCommand(command: Array<string>, opt: InteractiveExecuteCommandOptions): Promise<InteractiveCommandResult>;
+    public async executeDockerCommand(command: Array<string>, opt?: ExecuteCommandOptions): Promise<NonInteractiveCommandResult>;
+
     /**
      * Executes a docker command
      * @param command the command to execute split in an array of strings. (e.g. ['ps', '-a'])
-     * @param foreground If false, the output is not printed to the console (default: true)
+     * @param opt
      */
-    public async executeDockerCommand(command: Array<string>, foreground?: boolean) {
-        return this.executeCommand(await this.getDockerExecutable(), command, foreground);
+    public async executeDockerCommand(command: Array<string>, opt?: ExecuteCommandOptions) {
+        const env = await this.getEnvironmentVariables();
+        return executeCommand(await this.getDockerExecutable(), command, {...opt, env: {...env, ...(opt?.env || {})}});
     }
+
+    public async executeComposeCommand(command: Array<string>, opt: NonInteractiveExecuteCommandOptions): Promise<NonInteractiveCommandResult>;
+    public async executeComposeCommand(command: Array<string>, opt: InteractiveExecuteCommandOptions): Promise<InteractiveCommandResult>;
+    public async executeComposeCommand(command: Array<string>, opt?: ExecuteCommandOptions): Promise<NonInteractiveCommandResult>;
 
     /**
      * Executes a docker-compose command
      * @param command the command to execute split in an array of strings. (e.g. ['up', '-d'])
-     * @param foreground If false, the output is not printed to the console (default: true)
+     * @param opt
      */
-    public async executeComposeCommand(command: Array<string>, foreground?: boolean) {
+    public async executeComposeCommand(command: Array<string>, opt?: ExecuteCommandOptions) {
         let composeCommand = await this.getComposeExecutable();
 
         // Special case for "docker compose" (v2) command, because it is not a real executable
@@ -49,63 +119,36 @@ export class DockerContext {
             command = ['compose', ...command];
         }
 
-        return this.executeCommand(composeCommand, command, foreground);
+        const env = await this.getEnvironmentVariables();
+        return executeCommand(composeCommand, command, {...opt, env: {...env, ...(opt?.env || {})}});
     }
+
+    public async executeCommandInService(serviceName: string, command: Array<string>, opts?: {
+        execFlags?: Array<string>
+    } & ExecuteCommandOptions): Promise<NonInteractiveCommandResult>
+    public async executeCommandInService(serviceName: string, command: Array<string>, opts?: {
+        execFlags?: Array<string>
+    } & InteractiveExecuteCommandOptions): Promise<InteractiveCommandResult>
 
     /**
      * Executes a command inside a docker container
      * @param serviceName the name of the docker compose service to execute the command in
      * @param command the command to execute split in an array of strings.
-     * @param execFlags additional flags to pass to the docker exec command (if omitted, -ti is used)
-     * @param foreground If false, the output is not printed to the console (default: true)
+     * @param opts
      */
-    public async executeCommandInService(serviceName: string, command: Array<string>, execFlags?: Array<string>, foreground?: boolean) {
-        return this.executeCommandInContainer(
-            await this.getContainerIdFromServiceName(serviceName),
-            command,
-            execFlags,
-            foreground
-        );
-    }
-
-    /**
-     * The same as executeCommandInService, but with a container ID instead of a service name
-     * @param containerId the ID of the container to execute the command in
-     * @param command the command to execute split in an array of strings.
-     * @param execFlags additional flags to pass to the docker exec command (if omitted, -ti is used)
-     * @param foreground If false, the output is not printed to the console (default: true)
-     */
-    public async executeCommandInContainer(containerId: string, command: Array<string>, execFlags?: Array<string>, foreground?: boolean) {
-        return this.executeCommand(
+    public async executeCommandInService(serviceName: string, command: Array<string>, opts?: {
+        execFlags?: Array<string>
+    } & ExecuteCommandOptions): Promise<ExecuteCommandResult> {
+        await this.ensureComposeServiceIsRunning(serviceName);
+        return executeCommand(
             await this.getDockerExecutable(),
             [
                 'exec',
-                ...(execFlags || ['-ti']),
-                containerId,
+                ...(opts?.execFlags || (opts?.interactive ? ['-ti'] : ['-t'])),
+                await this.getContainerIdFromServiceName(serviceName),
                 ...command
             ],
-            foreground,
-            undefined,
-            async (_error, _stdout, stderr): Promise<boolean> => {
-                if (stderr.match(/container .* is not running/ig)) {
-                    const doRetry = await confirm({
-                        message: 'One ore more services are not running. Should I do a docker-compose up and retry?',
-                        default: true
-                    });
-
-                    if (!doRetry) {
-                        console.error('Please start the required docker container and try again.');
-                        process.exit(1);
-                    }
-
-                    await this.up();
-                    return this.executeCommandInContainer(containerId, command)
-                        .then(() => true)
-                        .catch(() => false);
-                }
-
-                return false;
-            }
+            opts
         );
     }
 
@@ -255,8 +298,7 @@ export class DockerContext {
      */
     public async isComposeServiceRunning(serviceName?: string): Promise<boolean> {
         try {
-            const containerId = await this.getContainerIdFromServiceName(serviceName);
-            return !!containerId;
+            return await this.isContainerRunning(await this.getContainerIdFromServiceName(serviceName));
         } catch (error) {
             return false;
         }
@@ -267,42 +309,74 @@ export class DockerContext {
      */
     public async isContainerRunning(containerId: string): Promise<boolean> {
         try {
-            const result = await this.executeDockerCommand(['inspect', '-f', '{{.State.Running}}', containerId], false);
+            const result = await this.executeDockerCommand(['inspect', '-f', '{{.State.Running}}', containerId]);
             return result.stdout.trim() === 'true';
         } catch (error) {
             return false;
         }
     }
 
-    /**
-     * Checks if a docker container with a specific name is running
-     */
-    public async isContainerWithNameRunning(containerName: string): Promise<boolean> {
-        try {
-            const result = await this.executeDockerCommand(['ps', '-q', '-f', `name=${containerName}`], false);
-            return !!result.stdout.trim();
-        } catch (error) {
-            return false;
+    public async ensureComposeServiceIsRunning(serviceName?: string): Promise<void> {
+        const isRunning = await this.isComposeServiceRunning(serviceName);
+        if (!isRunning) {
+            console.log(chalk.yellow(`The container for the service ${chalk.bold(`"${serviceName}"`)} is not running. I can try to start it for you.`));
+            const doStart = await select({
+                message: 'Should I start the container for you?',
+                choices: [{value: 'all'}, {value: serviceName, name: 'only: ' + serviceName}, {value: 'no'}]
+            });
+
+            if (doStart === 'no') {
+                throw new Error('Please start the required docker container and try again.');
+            }
+
+            if (doStart === 'all') {
+                await this.up();
+            } else {
+                await this.up({args: [doStart!]});
+            }
         }
     }
 
     /**
      * Gets container ID from service name
      */
-    public async getContainerIdFromServiceName(serviceName?: string): Promise<string> {
-        const service = serviceName || this._context.getConfig().docker.defaultServiceName;
+    public async getContainerIdFromServiceName(serviceName?: string, create?: boolean): Promise<string> {
+        const service = serviceName || this.defaultServiceName;
+
+        if (this._containerIdCache.has(service)) {
+            return this._containerIdCache.get(service)!;
+        }
 
         let containerId: string | undefined;
         try {
-            const result = await this.executeComposeCommand(['ps', '-a', '-q', service], false);
+            const result = await this.executeComposeCommand(['ps', '-a', '-q', service]);
             containerId = result.stdout.trim();
         } catch (e) {
             // Silence...
         }
 
         if (!containerId) {
+            if (create !== false) {
+                console.log(chalk.yellow(`I could not find a container for the service ${chalk.bold(`"${service}"`)}. This might be because the container was removed.
+I can try to let docker compose create the containers (without starting them) for you.`));
+                const tryContainerCreate = await confirm({
+                    message: 'Should I try to create the container for you?',
+                    default: true
+                });
+
+                if (!tryContainerCreate) {
+                    throw new Error(`No container found for service: ${service}`);
+                }
+
+                await this.executeComposeCommand(['up', '--no-start', service]);
+
+                return this.getContainerIdFromServiceName(service, false);
+            }
+
             throw new Error(`No container found for service: ${service}`);
         }
+
+        this._containerIdCache.set(service, containerId);
 
         return containerId;
     }
@@ -317,8 +391,8 @@ export class DockerContext {
         }
         args.add('--remove-orphans');
 
-        await this._context.getEvents().trigger('docker:up:before', {args});
-        await this.executeComposeCommand(['up', ...args]);
+        await this._context.events.trigger('docker:up:before', {args});
+        await this.executeComposeCommand(['up', ...args], {interactive: true});
     }
 
     /**
@@ -340,14 +414,14 @@ export class DockerContext {
      * Stops containers
      */
     public async stop(args?: string[]) {
-        await this.executeComposeCommand(['stop', ...(args ?? [])]);
+        await this.executeComposeCommand(['stop', ...(args ?? [])], {interactive: true});
     }
 
     /**
      * Stops and removes containers
      */
     public async down(args?: string[]) {
-        await this.executeComposeCommand(['down', ...(args ?? [])]);
+        await this.executeComposeCommand(['down', ...(args ?? [])], {interactive: true});
     }
 
     /**
@@ -366,10 +440,10 @@ export class DockerContext {
         }
 
         if (await this.getRuntimeType() === 'docker') {
-            await this.executeComposeCommand(['down', '--rmi', 'all', '--volumes']);
-            await this.executeComposeCommand(['rm', '--force', '--stop', '--volumes']);
+            await this.executeComposeCommand(['down', '--rmi', 'all', '--volumes'], {interactive: true});
+            await this.executeComposeCommand(['rm', '--force', '--stop', '--volumes'], {interactive: true});
         } else {
-            await this.executeComposeCommand(['down']);
+            await this.executeComposeCommand(['down'], {interactive: true});
         }
     }
 
@@ -382,13 +456,14 @@ export class DockerContext {
     }) {
         opts = opts || {};
         const args = new Set(opts.args || []);
-        // Check if there are any args, that do not start with a dash (this means no service is specified)
-        // But only, if "all" is not set
-        if (!opts.all && Array.from(args).some(arg => !arg.startsWith('-'))) {
-            args.add(this._context.getConfig().docker.defaultServiceName);
+
+        const someArgsStartWithoutDash = Array.from(args).filter(arg => arg !== '').some(arg => !arg.startsWith('-'));
+
+        if (!opts.all && !someArgsStartWithoutDash) {
+            args.add(this.defaultServiceName);
         }
 
-        await this.executeComposeCommand(['logs', ...args]);
+        await this.executeComposeCommand(['logs', ...args], {foreground: true});
     }
 
     /**
@@ -396,7 +471,7 @@ export class DockerContext {
      * @param args
      */
     public async ps(args?: Array<string>) {
-        await this.executeComposeCommand(['ps', ...(args ?? [])]);
+        await this.executeComposeCommand(['ps', ...(args ?? [])], {foreground: true});
     }
 
     /**
@@ -420,19 +495,16 @@ export class DockerContext {
      * Executes a command in a container or opens a shell
      */
     public async ssh(serviceName?: string, cmd?: string) {
-        const service = serviceName ?? this._context.getConfig().docker.defaultServiceName;
+        serviceName = serviceName ?? this.defaultServiceName;
 
         // Start the service if it's not running
-        if (!(await this.isComposeServiceRunning(service))) {
-            await this.up({args: [service]});
-        }
+        await this.ensureComposeServiceIsRunning(serviceName);
 
-        const containerId = await this.getContainerIdFromServiceName(service);
-        const shell = await this.findShellOfContainer(containerId);
+        const shell = await this.findShellOfContainer(await this.getContainerIdFromServiceName(serviceName));
 
         const command = cmd ? [shell, '-c', cmd] : [shell];
 
-        await this.executeCommandInContainer(containerId, command);
+        await this.executeCommandInService(serviceName, command, {interactive: true});
     }
 
     /**
@@ -440,8 +512,8 @@ export class DockerContext {
      */
     protected async getEnvironmentVariables(): Promise<Record<string, string>> {
         const runtimeType = await this.getRuntimeType();
-        const defaultUid = this._context.getConfig().docker.defaultUid;
-        const defaultGid = this._context.getConfig().docker.defaultGid;
+        const defaultUid = this.defaultUid;
+        const defaultGid = this.defaultGid;
 
         const env: Record<string, string> = {
             ...process.env,
@@ -465,119 +537,22 @@ export class DockerContext {
     }
 
     /**
-     * Internal helper to execute a command in a child process.
-     * @param command The executable to run
-     * @param args Array of arguments to pass to the executable
-     * @param foreground If true, the output is printed to the console (default: true)
-     * @param handleAsSuccess A callback that is called if the command IS CLOSED with a non-zero code. If it returns true, the error is handled as success.
-     * @param handleError A callback that is called if the command exits with an error. If it returns true, the error is handled as success.
-     * @protected
-     */
-    protected async executeCommand(
-        command: string,
-        args: Array<string>,
-        foreground?: boolean,
-        handleAsSuccess?: () => boolean,
-        handleError?: (error: Error, stdout: string, stderr: string) => Promise<boolean>
-    ): Promise<{
-        stdout: string,
-        stderr: string
-    }> {
-        // Remove empty strings or undefined/null values
-        args = args.filter(arg => arg !== undefined && arg !== null && arg !== '');
-
-        const child = spawn(
-            command,
-            args,
-            {
-                env: await this.getEnvironmentVariables(),
-                cwd: process.cwd(),
-                stdio: [
-                    'inherit',
-                    'pipe',
-                    'pipe'
-                ]
-            }
-        );
-
-        let forceQuit = false;
-
-        let stdout = '';
-        child.stdout.on('data', (data) => {
-            stdout += data.toString();
-            if (foreground !== false) {
-                process.stderr.write(data);
-            }
-        });
-
-        let stderr = '';
-        child.stderr.on('data', (data) => {
-            stderr += data.toString();
-            if (foreground !== false) {
-                process.stderr.write(data);
-            }
-        });
-
-        process.on('SIGINT', () => { // Catch Ctrl+C
-            forceQuit = true;
-            child.kill('SIGINT');
-        });
-
-        process.on('SIGTERM', () => {
-            forceQuit = true;
-            child.kill('SIGTERM');
-        });
-
-        return new Promise<{ stdout: string, stderr: string }>((resolve, reject) => {
-            const executeHandleError = (error: Error) => {
-                if (!handleError) {
-                    reject(error);
-                    return;
-                }
-
-                handleError(error, stdout, stderr)
-                    .then((handled) => {
-                        if (handled) {
-                            resolve({stdout, stderr});
-                        } else {
-                            reject(error);
-                        }
-                    })
-                    .catch(() => {
-                        reject(error);
-                    });
-            };
-
-            child.on('close', (code: number) => {
-                if (nonErrorExitCodes.includes(code) || forceQuit || (handleAsSuccess && handleAsSuccess())) {
-                    resolve({stdout, stderr});
-                    return;
-                }
-
-                executeHandleError(new Error(`command "${command} ${args.join(' ')}" exited with code ${code}`));
-            });
-
-            child.on('error', executeHandleError);
-        });
-    }
-
-    /**
      * Finds the shell of a container
      * @param containerId the ID of the container to find the shell for
      * @returns the path to the shell executable
      */
     protected async findShellOfContainer(containerId: string): Promise<string> {
-        const shellOptions = this._context.getConfig().docker.shellsToUse;
+        const shellOptions = this.shellsToUse;
 
         // Check if "which" or "command" are available
         let whichCommand: string[] | undefined;
 
         try {
-            await this.executeDockerCommand(['exec', containerId, 'which', 'which'], false);
+            await this.executeDockerCommand(['exec', containerId, 'which', 'which'], {throwOnExitCode: true});
             whichCommand = ['which'];
         } catch (e) {
             try {
-                await this.executeDockerCommand(['exec', containerId, 'command'], false);
+                await this.executeDockerCommand(['exec', containerId, 'command'], {throwOnExitCode: true});
                 whichCommand = ['command', '-v'];
             } catch (e) {
                 // Silence...
@@ -588,7 +563,7 @@ export class DockerContext {
         if (whichCommand) {
             for (const shell of shellOptions) {
                 try {
-                    const result = await this.executeDockerCommand(['exec', containerId, ...whichCommand, shell], false);
+                    const result = await this.executeDockerCommand(['exec', containerId, ...whichCommand, shell], {throwOnExitCode: true});
                     return result.stdout.trim();
                 } catch (e) {
                     // Silence...
@@ -598,7 +573,7 @@ export class DockerContext {
 
         // Method 2: Inspecting the image configuration
         try {
-            const inspectResult = await this.executeDockerCommand(['inspect', containerId], false);
+            const inspectResult = await this.executeDockerCommand(['inspect', containerId], {throwOnExitCode: true});
             const inspectData = JSON.parse(inspectResult.stdout);
             if (inspectData && inspectData.length > 0) {
                 // Check for explicitly defined shell
@@ -612,7 +587,7 @@ export class DockerContext {
 
         // Method 3: Looking at /etc/passwd for real shells
         try {
-            const passwdContent = await this.executeDockerCommand(['exec', containerId, 'cat', '/etc/passwd'], false);
+            const passwdContent = await this.executeDockerCommand(['exec', containerId, 'cat', '/etc/passwd'], {throwOnExitCode: true});
             const lines = passwdContent.stdout.split('\n').map(line => line.trim());
             for (const line of lines) {
                 const fields = line.split(':');
