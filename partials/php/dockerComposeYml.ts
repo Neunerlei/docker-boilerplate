@@ -27,7 +27,8 @@ export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, _, 
         restart: 'no',
         volumes: [
             'php_socket:/var/run/php',
-            '.' + context.getPartialDir('php') + ':/var/www/html'
+            '.' + context.getPartialDir('php') + ':/var/www/html',
+            './docker/php/php.entrypoint.dev.sh:/user/bin/app/boot.local.sh'
         ],
         healthcheck: {
             test: 'cgi-fcgi -bind -connect 127.0.0.1:9000 || exit 1',

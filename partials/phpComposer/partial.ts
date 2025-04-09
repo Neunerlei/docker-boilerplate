@@ -1,6 +1,7 @@
 import {PartialContext} from '@builder/partial/PartialContext';
 import {PartialDefinition} from '@builder/partial/types';
 import {replaceInFile} from '@builder/util/textUtils';
+import {dockerfile} from './dockerfile.ts';
 
 export default function (context: PartialContext): PartialDefinition {
     return {
@@ -38,9 +39,11 @@ export default function (context: PartialContext): PartialDefinition {
             );
         },
         bodyBuilders: async (collector) => {
-            collector.add('php.entrypoint.dev.sh', async body => {
-                body.addCommand('composer.install', 'composer install');
-            });
+            collector
+                .add('php.entrypoint.dev.sh', async body => {
+                    body.addCommand('composer.install', 'composer install');
+                })
+                .add('Dockerfile', dockerfile);
         }
     };
 }

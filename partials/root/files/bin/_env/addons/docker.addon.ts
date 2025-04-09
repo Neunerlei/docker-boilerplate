@@ -123,5 +123,16 @@ export const addon: AddonEntrypoint = async (context) => ({
             .action(() => {
                 exec(`open ${context.docker.projectHost}`);
             });
+
+        program
+            .command('docker:build:prod')
+            .description('Builds the production image for the project')
+            .option('--tag <tag>', 'Tag to use for the image', context.docker.projectName)
+            .action(async (options) => {
+                await context.docker.executeDockerCommand(
+                    ['build', '--target', 'app_prod', '--pull', '-t', options.tag, context.paths.projectDir],
+                    {foreground: true}
+                );
+            });
     }
 });

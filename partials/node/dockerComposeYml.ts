@@ -20,7 +20,8 @@ export function dockerComposeYml(handlesWebTraffic: boolean): BodyBuilder<Docker
             },
             restart: 'no',
             volumes: [
-                '.' + appSource + ':/var/www/html'
+                '.' + appSource + ':/var/www/html',
+                './docker/node/node.entrypoint.dev.sh:/usr/bin/app/boot.sh'
             ],
             environment: [
                 'DOCKER_PROJECT_INSTALLED=${DOCKER_PROJECT_INSTALLED:-"false"}',
