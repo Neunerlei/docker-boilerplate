@@ -21,7 +21,7 @@ export function dockerComposeYml(handlesWebTraffic: boolean): BodyBuilder<Docker
             restart: 'no',
             volumes: [
                 '.' + appSource + ':/var/www/html',
-                './docker/node/node.entrypoint.dev.sh:/usr/bin/app/boot.sh'
+                './docker/node/node.entrypoint.dev.sh:/usr/bin/app/entrypoint.sh'
             ],
             environment: [
                 'DOCKER_PROJECT_INSTALLED=${DOCKER_PROJECT_INSTALLED:-"false"}',

@@ -39,7 +39,7 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
     groupadd -g \${DOCKER_GID} www-data && \\
     useradd -u \${DOCKER_UID} -g www-data www-data
 `)
-            .add('copy.entrypoint', 'COPY docker/php/php.entrypoint.dev.sh /user/bin/app/boot.local.sh')
+            .add('copy.entrypoint', 'COPY docker/php/php.entrypoint.dev.sh /user/bin/app/entrypoint.local.sh')
             .add('user.wwwData', 'USER www-data');
 
         // PROD

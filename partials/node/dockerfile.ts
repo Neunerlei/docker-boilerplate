@@ -39,9 +39,9 @@ RUN (userdel -r $(getent passwd "\${DOCKER_UID}" | cut -d: -f1) || true) && \\
     groupadd -g \${DOCKER_GID} www-data && \\
     useradd -u \${DOCKER_UID} -g www-data www-data
 `)
-            .add('copy.entrypoint', 'COPY docker/node/node.entrypoint.dev.sh /usr/bin/app/boot.sh')
-            .add('run.entrypointPermissions', 'RUN chmod +x /usr/bin/app/boot.sh')
-            .add('entrypoint', 'ENTRYPOINT /usr/bin/app/boot.sh')
+            .add('copy.entrypoint', 'COPY docker/node/node.entrypoint.dev.sh /usr/bin/app/entrypoint.sh')
+            .add('run.entrypointPermissions', 'RUN chmod +x /usr/bin/app/entrypoint.sh')
+            .add('entrypoint', 'ENTRYPOINT /usr/bin/app/entrypoint.sh')
             .add('user.wwwData', 'USER www-data');
 
         // PROD
