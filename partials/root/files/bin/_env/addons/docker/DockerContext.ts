@@ -34,58 +34,120 @@ export class DockerContext {
         this._context = context;
     }
 
+    /**
+     * Returns true if the project is installed (using bin/env install).
+     * This is determined by the DOCKER_PROJECT_INSTALLED environment variable.
+     */
     public get isInstalled(): boolean {
         return this._context.env.getGlobal('DOCKER_PROJECT_INSTALLED') === 'true';
     }
 
+    /**
+     * Returns the name of the docker compose service to use by default.
+     * This is determined by the DOCKER_PROJECT_DEFAULT_SERVICE environment variable.
+     */
     public get defaultServiceName(): string {
-        return this._context.env.getGlobal('SERVICE_NAME', 'app')!;
+        return this._context.env.getGlobal('DOCKER_PROJECT_DEFAULT_SERVICE', 'app')!;
     }
 
+    /**
+     * Returns the user id that should be used inside the docker container.
+     * This reflects to the `DOCKER_UID` build arg of the containers.
+     */
     public get defaultUid(): string {
-        return this._context.env.getGlobal('ENV_UID', '1000')!;
+        return this._context.env.getGlobal('DOCKER_PROJECT_UID', '1000')!;
     }
 
+    /**
+     * Returns the group id that should be used inside the docker container.
+     * This reflects to the `DOCKER_GID` build arg of the containers.
+     */
     public get defaultGid(): string {
-        return this._context.env.getGlobal('ENV_GID', '1000')!;
+        return this._context.env.getGlobal('DOCKER_PROJECT_GID', '1000')!;
     }
 
-    public get projectDomainSuffix(): string {
-        return this._context.env.getGlobal('DOCKER_PROJECT_DOMAIN_SUFFIX', '.dev.local')!;
-    }
-
+    /**
+     * Returns the configured domain of the project.
+     * If not set, it will default to `localhost`.
+     */
     public get projectDomain(): string {
         return this._context.env.getGlobal('DOCKER_PROJECT_DOMAIN', 'localhost')!;
     }
 
+    /**
+     * Returns the configured ip of the project.
+     * If not set, it will default to `127.0.0.1`.
+     */
     public get projectIp(): string {
         return this._context.env.getGlobal('DOCKER_PROJECT_IP', '127.0.0.1')!;
     }
 
-    public get projectPort(): string {
-        return this._context.env.getGlobal('DOCKER_PROJECT_PORT', '80')!;
+    /**
+     * When the `bin/env install` command is run, a new domain will be generated.
+     * This domain is the `PROJECT_NAME` appended with the suffix defined in the
+     * `DOCKER_PROJECT_DOMAIN_SUFFIX` environment variable.
+     * This method returns the suffix or the `.dev.local` default.
+     */
+    public get projectDomainSuffix(): string {
+        return this._context.env.getGlobal('DOCKER_PROJECT_DOMAIN_SUFFIX', '.dev.local')!;
     }
 
+    /**
+     * Returns the configured port of the project.
+     * If not set, it will default to `80` for http and `443` for https.
+     */
+    public get projectPort(): string {
+        return this._context.env.getGlobal('DOCKER_PROJECT_PORT', this.isSsl ? '443' : '80')!;
+    }
+
+    /**
+     * Returns the configured host of the project.
+     * The host is a combination of the protocol, domain and port.
+     */
     public get projectHost(): string {
-        const expectedPort = this.projectProtocol === 'http' ? '80' : '443';
-        const port = this.projectPort === expectedPort ? '' : `:${this.projectPort}`;
+        const projectPort = this.projectPort;
+        const port = ['80', '443'].includes(projectPort) ? '' : `:${projectPort}`;
         return `${this.projectProtocol}://${this.projectDomain}${port}`;
     }
 
+    /**
+     * Returns the unique name of this project (url-safe).
+     * It is determined by the `PROJECT_NAME` environment variable.
+     */
     public get projectName(): string {
         return this._context.env.getGlobalRequired('PROJECT_NAME');
     }
 
+    /**
+     * Returns the configured protocol of the project.
+     * This is either `http` or `https` and is determined by the `DOCKER_PROJECT_PROTOCOL` environment variable,
+     * or if not set by the `DOCKER_PROJECT_PORT` environment variable.
+     */
     public get projectProtocol(): string {
-        return this._context.env.getGlobal('DOCKER_PROJECT_PROTOCOL', 'http')!;
+        return this._context.env.getGlobal('DOCKER_PROJECT_PROTOCOL', this.isSsl ? 'https' : 'http')!;
     }
 
+    /**
+     * Checks if the project is using ssl based on the DOCKER_PROJECT_PORT and DOCKER_PROJECT_PROTOCOL
+     * environment variables
+     */
+    public get isSsl(): boolean {
+        if (this._context.env.getGlobal('DOCKER_PROJECT_PORT') === '443') {
+            return true;
+        }
+        return this._context.env.getGlobal('DOCKER_PROJECT_PROTOCOL') === 'https';
+    }
+
+    /**
+     * Returns a list of possible shell options to try when entering a container
+     * By default, bash, sh, zsh, dash and ksh are used. The first one that works will be used.
+     * The list is determined by the `DOCKER_SHELLS_TO_USE` environment variable, which is a comma separated list.
+     */
     public get shellsToUse(): string[] {
         return this._context.env.getGlobal('DOCKER_SHELLS_TO_USE', 'bash,sh,zsh,dash,ksh')!
             .split(',')
             .map((shell: string) => shell.trim());
     }
-
 
     public async executeDockerCommand(command: Array<string>, opt: NonInteractiveExecuteCommandOptions): Promise<NonInteractiveCommandResult>;
     public async executeDockerCommand(command: Array<string>, opt: InteractiveExecuteCommandOptions): Promise<InteractiveCommandResult>;
