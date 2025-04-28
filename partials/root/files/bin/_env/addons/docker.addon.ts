@@ -1,7 +1,7 @@
-import type {AddonEntrypoint} from '@/loadAddons.ts';
-import {DockerContext} from './docker/DockerContext.ts';
-import {Installer} from './docker/installer/Installer.ts';
-import {defineDockerEnv} from './docker/defineDockerEnv.ts';
+import type {AddonEntrypoint} from '@/loadAddons.js';
+import {DockerContext} from './docker/DockerContext.js';
+import {Installer} from './docker/installer/Installer.js';
+import {defineDockerEnv} from './docker/defineDockerEnv.js';
 import type {Command} from 'commander';
 import {exec} from 'node:child_process';
 

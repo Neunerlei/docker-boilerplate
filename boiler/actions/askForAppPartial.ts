@@ -1,6 +1,6 @@
 import {PartialRegistry} from '../partial/PartialRegistry';
 import {select} from '@inquirer/prompts';
-import {uiLogInfo, uiTextBlock} from '@builder/util/uiUtils.js';
+import {uiLogInfo, uiTextBlock} from '@boiler/util/uiUtils.js';
 import chalk from 'chalk';
 
 export async function askForAppPartial(registry: PartialRegistry) {

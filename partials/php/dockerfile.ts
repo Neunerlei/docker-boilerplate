@@ -1,5 +1,5 @@
-import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
-import type {BodyBuilder} from '@builder/partial/types.ts';
+import {DockerfileBody} from '@boiler/filebuilder/body/DockerfileBody';
+import type {BodyBuilder} from '@boiler/partial/types.js';
 
 export const dockerfileFpmDebian: BodyBuilder<DockerfileBody> =
     async function (body, {partial}) {

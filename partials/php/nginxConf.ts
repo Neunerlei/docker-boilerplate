@@ -1,6 +1,6 @@
-import {NginxBody} from '@builder/filebuilder/body/NginxBody';
-import {indentText} from '@builder/util/textUtils';
-import type {BodyBuilder} from '@builder/partial/types';
+import {NginxBody} from '@boiler/filebuilder/body/NginxBody';
+import {indentText} from '@boiler/util/textUtils';
+import type {BodyBuilder} from '@boiler/partial/types';
 
 export const nginxConf = (createPublicShare: boolean): BodyBuilder<NginxBody> => {
     return async (body) => {

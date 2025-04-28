@@ -1,6 +1,6 @@
 import {select} from '@inquirer/prompts';
-import type {Partial} from '@builder/partial/Partial.js';
-import type {PartialRegistry} from '@builder/partial/PartialRegistry.js';
+import type {Partial} from '@boiler/partial/Partial.js';
+import type {PartialRegistry} from '@boiler/partial/PartialRegistry.js';
 
 export async function askForVersionOfPartial(partial: Partial, partialRegistry: PartialRegistry) {
     const {versions, key} = partial.definition;

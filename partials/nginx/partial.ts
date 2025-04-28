@@ -1,6 +1,6 @@
-import {PartialDefinition} from '@builder/partial/types';
-import {NginxBody, type NginxFileType} from '@builder/filebuilder/body/NginxBody';
-import {replaceMarkerWithIndent} from '@builder/util/textUtils.js';
+import {PartialDefinition} from '@boiler/partial/types';
+import {NginxBody, type NginxFileType} from '@boiler/filebuilder/body/NginxBody';
+import {replaceMarkerWithIndent} from '@boiler/util/textUtils.js';
 import {dockerComposeYml} from './dockerComposeYml';
 
 export default function (): PartialDefinition {

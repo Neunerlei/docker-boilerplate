@@ -5,7 +5,7 @@ import {DockerfileBody} from './body/DockerfileBody';
 import {DockerComposeBody} from './body/DockerComposeBody';
 import {NginxBody} from './body/NginxBody';
 import {EntrypointBody} from './body/EntrypointBody';
-import type {Partial} from '@builder/partial/Partial.js';
+import type {Partial} from '@boiler/partial/Partial.js';
 
 export type BodyBuilderPosition = 'before' | 'after';
 

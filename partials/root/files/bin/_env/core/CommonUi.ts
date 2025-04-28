@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import PrettyError from 'pretty-error';
-import type {EventBus} from './EventBus.ts';
-import type {PackageInfo} from './PackageInfo.ts';
+import type {EventBus} from './EventBus.js';
+import type {PackageInfo} from './PackageInfo.js';
 
 export class CommonUi {
     private _events: EventBus;

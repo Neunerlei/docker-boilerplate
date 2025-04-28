@@ -1,7 +1,7 @@
-import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
-import type {BodyBuilder} from '@builder/partial/types.ts';
-import {envRedisDockerComposeEnvironmentDefinition} from '../redis/envTpl.ts';
-import {envMysqlDockerComposeEnvironmentDefinition} from '../mysql/envTpl.ts';
+import {DockerComposeBody} from '@boiler/filebuilder/body/DockerComposeBody';
+import type {BodyBuilder} from '@boiler/partial/types.js';
+import {envRedisDockerComposeEnvironmentDefinition} from '../redis/envTpl.js';
+import {envMysqlDockerComposeEnvironmentDefinition} from '../mysql/envTpl.js';
 
 export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
     body.merge({

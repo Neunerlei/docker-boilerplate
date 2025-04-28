@@ -1,9 +1,9 @@
-import {Partial} from '@builder/partial/Partial.js';
-import {PartialDefinition} from '@builder/partial/types.js';
+import {Partial} from '@boiler/partial/Partial.js';
+import {PartialDefinition} from '@boiler/partial/types.js';
 import {dockerfile} from './dockerfile.js';
 import {dockerComposeYml} from './dockerComposeYml.js';
 import {nginxConf} from './nginxConf.js';
-import {replaceInFile} from '@builder/util/textUtils.js';
+import {replaceInFile} from '@boiler/util/textUtils.js';
 import {askForUsage, type NodeUsage} from './askForUsage.js';
 
 export default function (partial: Partial): PartialDefinition {

@@ -11,10 +11,11 @@ import {PartialDefinition} from './partial/types';
 import {FsUtils} from './util/FsUtils';
 import {doBuildFiles} from './actions/doBuildFiles';
 import {doFinalizeEnvScript} from './actions/doFinalizeEnvScript';
-import {doShowSummary} from '@builder/actions/doShowSummary.js';
-import {Summary} from '@builder/util/Summary.js';
+import {doShowSummary} from '@boiler/actions/doShowSummary.js';
+import {Summary} from '@boiler/util/Summary.js';
 import process from 'node:process';
-import {doDumpFilesToOutput} from '@builder/actions/doDumpFilesToOutput.js';
+import {doDumpFilesToOutput} from '@boiler/actions/doDumpFilesToOutput.js';
+import {doShowWelcome} from '@boiler/actions/doShowWelcome.js';
 
 await (async function index() {
     try {
@@ -24,6 +25,7 @@ await (async function index() {
         const context = new BuildContext(paths, fs, (): PartialRegistry => registry, summary);
         const registry = new PartialRegistry(context);
 
+        doShowWelcome();
         await doRegisterAvailablePartials(paths, registry);
         await doAddRootPartial(registry);
         await askForAtLeastOneStandalonePartial(context);

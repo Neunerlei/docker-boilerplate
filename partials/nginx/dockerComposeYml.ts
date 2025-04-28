@@ -1,5 +1,5 @@
-import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
-import type {BodyBuilder} from '@builder/partial/types.ts';
+import {DockerComposeBody} from '@boiler/filebuilder/body/DockerComposeBody';
+import type {BodyBuilder} from '@boiler/partial/types.js';
 
 export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body) => {
     body.setService('nginx', {

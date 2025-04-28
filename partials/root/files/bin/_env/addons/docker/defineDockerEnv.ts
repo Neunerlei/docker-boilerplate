@@ -1,6 +1,6 @@
-import type {AddonConfig} from '@/loadAddons.ts';
+import type {AddonConfig} from '@/loadAddons.js';
 import path from 'node:path';
-import type {Paths} from '@/Paths.ts';
+import type {Paths} from '@/Paths.js';
 
 export const defineDockerEnv: (paths: Paths) => AddonConfig['env'] = (paths) => async (definition) => {
     definition

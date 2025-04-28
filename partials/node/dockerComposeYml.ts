@@ -1,5 +1,5 @@
-import {type BodyBuilder} from '@builder/partial/types';
-import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
+import {type BodyBuilder} from '@boiler/partial/types';
+import {DockerComposeBody} from '@boiler/filebuilder/body/DockerComposeBody';
 import type {NodeUsage} from './askForUsage.js';
 
 export function dockerComposeYml(usage: NodeUsage): BodyBuilder<DockerComposeBody> {

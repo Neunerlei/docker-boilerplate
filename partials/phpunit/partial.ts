@@ -1,5 +1,5 @@
-import {Partial} from '@builder/partial/Partial.js';
-import {PartialDefinition} from '@builder/partial/types';
+import {Partial} from '@boiler/partial/Partial.js';
+import {PartialDefinition} from '@boiler/partial/types';
 import {composerJson} from './composerJson';
 import {gitignore} from './gitignore';
 import {dockerfile} from './dockerfile';

@@ -1,5 +1,5 @@
-import {Partial} from '@builder/partial/Partial.js';
-import {PartialDefinition} from '@builder/partial/types';
+import {Partial} from '@boiler/partial/Partial.js';
+import {PartialDefinition} from '@boiler/partial/types';
 import {dockerfileFpmDebian, dockerfileRedisAddon} from './dockerfile';
 import {
     dockerComposeYml,
@@ -9,7 +9,7 @@ import {
 } from './dockerComposeYml';
 import {confirm} from '@inquirer/prompts';
 import {nginxConf} from './nginxConf';
-import {uiTextNsGetter} from '@builder/util/uiUtils.js';
+import {uiTextNsGetter} from '@boiler/util/uiUtils.js';
 
 export default function (partial: Partial): PartialDefinition {
     let createPublicShare = false;

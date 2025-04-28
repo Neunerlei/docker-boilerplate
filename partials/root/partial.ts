@@ -1,5 +1,5 @@
-import {PartialDefinition} from '@builder/partial/types.js';
-import {ObjectBody} from '@builder/filebuilder/body/ObjectBody.ts';
+import {PartialDefinition} from '@boiler/partial/types.js';
+import {ObjectBody} from '@boiler/filebuilder/body/ObjectBody.js';
 
 export default function (): PartialDefinition {
     return {

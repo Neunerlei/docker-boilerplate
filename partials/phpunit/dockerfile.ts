@@ -1,5 +1,5 @@
-import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
-import type {BodyBuilder} from '@builder/partial/types';
+import {DockerfileBody} from '@boiler/filebuilder/body/DockerfileBody';
+import type {BodyBuilder} from '@boiler/partial/types';
 
 export const dockerfile: BodyBuilder<DockerfileBody> = async (body) => {
     body.addHook('php', 'root:dependencies', `

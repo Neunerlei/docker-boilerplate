@@ -1,11 +1,11 @@
-import type {ConcreteInstaller} from './types.ts';
+import type {ConcreteInstaller} from './types.js';
 import {promisify} from 'util';
 import {exec, execSync} from 'child_process';
 import {promises as fs} from 'fs';
 import path from 'node:path';
 import {confirm} from '@inquirer/prompts';
 import chalk from 'chalk';
-import {detectLinuxPackageManager, type LinuxPackageManager} from '../utils.ts';
+import {detectLinuxPackageManager, type LinuxPackageManager} from '../utils.js';
 
 const execAsync = promisify(exec);
 

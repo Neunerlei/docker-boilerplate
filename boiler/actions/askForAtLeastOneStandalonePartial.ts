@@ -2,7 +2,7 @@ import {checkbox} from '@inquirer/prompts';
 import {askForVersionOfPartial} from './askForVersionOfPartial';
 import {BuildContext} from '../util/BuildContext';
 import {askForAppPartial} from './askForAppPartial.js';
-import {uiLogInfo, uiTextBlock} from '@builder/util/uiUtils.js';
+import {uiLogInfo, uiTextBlock} from '@boiler/util/uiUtils.js';
 import chalk from 'chalk';
 
 export async function askForAtLeastOneStandalonePartial(context: BuildContext) {

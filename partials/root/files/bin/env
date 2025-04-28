@@ -281,17 +281,26 @@ show_spinner_while_pid_is_running() {
 
 has_verbose_flag() {
   for arg in "$@"; do
-    [ "$arg" = "--env-verbose" ] && return 0
+    [ "$arg" = "--bin-verbose" ] && return 0
   done
   return 1
 }
 
-handle_env_npm() {
-  [ "$1" != "env-npm" ] && return
+handle_bin_npm() {
+  [ "$1" != "bin:npm" ] && return
   shift
   cd "$ENV_DIR"
   export PATH="$NODE_BIN_DIR:$PATH"
   "$NPM_BIN" "$@"
+  exit $?
+}
+
+handle_bin_tsc() {
+  [ "$1" != "bin:tsc" ] && return
+  shift
+  cd "$ROOT_DIR"
+  export PATH="$NODE_BIN_DIR:$PATH"
+  "$NPM_BIN" exec -c "tsc --noEmit $@"
   exit $?
 }
 
@@ -304,6 +313,7 @@ setup_node
 configure_npm
 handle_env_npm "$@"
 install_dependencies
+handle_env_tsc "$@"
 
 # Run the Node.js script
 [ $VERBOSE -eq 1 ] && echo "Running Node.js script..."

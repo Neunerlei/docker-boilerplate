@@ -1,5 +1,5 @@
-import type {AddonEntrypoint} from '@/loadAddons.ts';
-import {ComposerContext} from './composer/ComposerContext.ts';
+import type {AddonEntrypoint} from '@/loadAddons.js';
+import {ComposerContext} from './composer/ComposerContext.js';
 
 export const addon: AddonEntrypoint = async (context) => ({
     context: async () => ({

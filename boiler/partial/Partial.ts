@@ -1,6 +1,6 @@
 import {PartialDefinition} from './types';
 import {BuildContext} from '../util/BuildContext';
-import type {PartialSummary} from '@builder/util/Summary.js';
+import type {PartialSummary} from '@boiler/util/Summary.js';
 
 export interface PartialState {
     /**

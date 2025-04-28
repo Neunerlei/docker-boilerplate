@@ -1,6 +1,6 @@
 import {SortedKeyedList} from '../../../util/SortedKeyedList';
-import {ServiceSectionHookProvider, type WellKnownHooks} from '@builder/filebuilder/body/docker/PartialHookConsumer.js';
-import {joinLines} from '@builder/filebuilder/body/docker/joinLines.js';
+import {ServiceSectionHookProvider, type WellKnownHooks} from '@boiler/filebuilder/body/docker/PartialHookConsumer.js';
+import {joinLines} from '@boiler/filebuilder/body/docker/joinLines.js';
 
 export class Instructions {
     private readonly _list: SortedKeyedList<string, string | { toString(): string }> = new SortedKeyedList();

@@ -1,4 +1,4 @@
-import type {Context} from '@/Context.ts';
+import type {Context} from '@/Context.js';
 import {promisify} from 'util';
 import {exec, execSync} from 'node:child_process';
 import {confirm, input, select} from '@inquirer/prompts';
@@ -11,7 +11,7 @@ import {
     type InteractiveExecuteCommandOptions,
     type NonInteractiveCommandResult,
     type NonInteractiveExecuteCommandOptions
-} from '@/executeCommand.ts';
+} from '@/executeCommand.js';
 import chalk from 'chalk';
 
 const execAsync = promisify(exec);

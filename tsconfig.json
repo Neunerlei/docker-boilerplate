@@ -1,30 +1,34 @@
 {
   "include": [
+    "./global.d.ts",
     "./builder/**/*.ts",
-    "./partials/**/*.ts",
+    "./partials/**/*.ts"
+  ],
+  "exclude": [
+    "./out",
+    "./node_modules"
   ],
   "compilerOptions": {
     "baseUrl": ".",
-    "typeRoots": [
-      "./node_modules/@types",
-      "./out/bin/_env/node_modules/@types",
-    ],
     "paths": {
-      "@builder/*": ["./builder/*"],
+      "@boiler/*": [
+        "./boiler/*"
+      ],
       "@/*": ["./partials/root/files/bin/_env/core/*"],
       "commander": ["./out/bin/_env/node_modules/commander"],
       "glob": ["./out/bin/_env/node_modules/glob"],
-      "chalk": ["./out/bin/_env/node_modules/chalk"],
+      "chalk": [
+        "./out/bin/_env/node_modules/chalk"
+      ]
     },
     "module": "esnext",
     "resolveJsonModule": true,
     "allowJs": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "noImplicitAny": false,
+    "noImplicitAny": true,
     "strictNullChecks": true,
     "moduleResolution": "node",
-    "target": "esnext",
-    "allowImportingTsExtensions": true,
+    "target": "esnext"
   }
 }

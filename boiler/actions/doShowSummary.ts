@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import type {BuildContext} from '@builder/util/BuildContext.js';
+import type {BuildContext} from '@boiler/util/BuildContext.js';
 
 export async function doShowSummary(context: BuildContext): Promise<void> {
     const {paths, partials: {app: {name: appPartialName}}, summary} = context;

@@ -4,7 +4,7 @@ import {AbstractBody} from './AbstractBody';
 import {BuildContext} from '../../util/BuildContext';
 import {Error} from 'memfs/lib/internal/errors';
 import {FileBuilderParser} from '../FileBuilder';
-import {Hooks, type WellKnownHooks} from '@builder/filebuilder/body/docker/PartialHookConsumer.js';
+import {Hooks, type WellKnownHooks} from '@boiler/filebuilder/body/docker/PartialHookConsumer.js';
 
 export class DockerfileBody extends AbstractBody {
     private readonly _services: Record<string, ServiceSection> = {};

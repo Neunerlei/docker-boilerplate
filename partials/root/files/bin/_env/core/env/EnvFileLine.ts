@@ -1,4 +1,4 @@
-import {pregQuote} from '../util.ts';
+import {pregQuote} from '../util.js';
 import {parse as parseEnv} from 'dotenv';
 
 export class EnvFileLine {
@@ -104,8 +104,8 @@ export class EnvFileLine {
 
         const regexify = (str: string) => new RegExp('\\s*["\']*' + pregQuote(str) + '["\']*');
         const templateParts = this._template.split('=');
-        const templateKey = templateParts.shift().replace(regexify(this._key), '%%%KEY%%%');
-        const templateValue = templateParts.join('=').replace(regexify(this._value), '%%%VALUE%%%');
+        const templateKey = templateParts.shift()!.replace(regexify(this._key), '%%%KEY%%%');
+        const templateValue = templateParts.join('=').replace(regexify(this._value!), '%%%VALUE%%%');
         this._template = templateKey + '=' + templateValue;
     }
 }

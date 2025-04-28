@@ -1,6 +1,6 @@
-import type {PartialDefinition} from '@builder/partial/types.ts';
-import {dockerComposeYml} from './dockerComposeYml.ts';
-import {envTpl} from './envTpl.ts';
+import type {PartialDefinition} from '@boiler/partial/types.js';
+import {dockerComposeYml} from './dockerComposeYml.js';
+import {envTpl} from './envTpl.js';
 
 export default function (): PartialDefinition {
     return {

@@ -1,11 +1,11 @@
-import {CommonUi} from './CommonUi.ts';
-import {EventBus} from './EventBus.ts';
-import {createPackageJson} from './PackageInfo.ts';
-import {createPaths} from './Paths.ts';
-import {createEnvFile} from './env/EnvFile.ts';
-import {createPlatform} from './Platform.ts';
-import {loadAddons} from './loadAddons.ts';
-import {createContext, extendContext} from './Context.ts';
+import {CommonUi} from './CommonUi.js';
+import {EventBus} from './EventBus.js';
+import {createPackageJson} from './PackageInfo.js';
+import {createPaths} from './Paths.js';
+import {createEnvFile} from './env/EnvFile.js';
+import {createPlatform} from './Platform.js';
+import {loadAddons} from './loadAddons.js';
+import {createContext, extendContext} from './Context.js';
 import {welcome} from '@/welcome.js';
 
 export class Application {
@@ -27,7 +27,7 @@ export class Application {
                 .name(pkg.name)
                 .description(pkg.description)
                 .version(pkg.version)
-                .option('--env-verbose', 'Verbosity of the bin/env Node.js bootstrap script')
+                .option('--bin-verbose', 'Verbosity of the bin/env bootstrap script')
                 .showSuggestionAfterError(true)
                 .helpCommand(true)
                 .addHelpText('beforeAll', () => ui.renderHelpIntro())

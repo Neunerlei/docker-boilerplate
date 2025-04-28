@@ -1,7 +1,7 @@
 import {checkbox} from '@inquirer/prompts';
 import {askForVersionOfPartial} from './askForVersionOfPartial';
 import {BuildContext} from '../util/BuildContext';
-import {uiLogInfo, uiTextBlock} from '@builder/util/uiUtils.js';
+import {uiLogInfo, uiTextBlock} from '@boiler/util/uiUtils.js';
 
 export async function askForAdditionalPartials(context: BuildContext) {
     const {partials: partialRegistry} = context;

@@ -1,6 +1,6 @@
-import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
-import type {BodyBuilder} from '@builder/partial/types';
-import {envMysqlDockerComposeEnvironmentSelfDefinition} from './envTpl.ts';
+import {DockerComposeBody} from '@boiler/filebuilder/body/DockerComposeBody';
+import type {BodyBuilder} from '@boiler/partial/types';
+import {envMysqlDockerComposeEnvironmentSelfDefinition} from './envTpl.js';
 
 export const dockerComposeYmlBefore: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
     body.setService('mysql', {

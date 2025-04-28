@@ -1,11 +1,11 @@
-import type {Context} from '@/Context.ts';
-import {IpAddressStorage} from './IpAddressStorage.ts';
-import type {ConcreteInstaller} from './concrete/types.ts';
-import {LinuxInstaller} from './concrete/LinuxInstaller.ts';
+import type {Context} from '@/Context.js';
+import {IpAddressStorage} from './IpAddressStorage.js';
+import type {ConcreteInstaller} from './concrete/types.js';
+import {LinuxInstaller} from './concrete/LinuxInstaller.js';
 import {confirm} from '@inquirer/prompts';
 import chalk from 'chalk';
-import {DarwinInstaller} from './concrete/DarwinInstaller.ts';
-import {LinuxWslInstaller} from './concrete/LinuxWslInstaller.ts';
+import {DarwinInstaller} from './concrete/DarwinInstaller.js';
+import {LinuxWslInstaller} from './concrete/LinuxWslInstaller.js';
 import path from 'node:path';
 
 export class Installer {
@@ -61,7 +61,7 @@ What the script will do:
         console.log('Stopping running docker containers...');
         await docker.down();
 
-        await events.trigger('installer:dependencies:before');
+        await events.trigger('installer:dependencies:before', undefined);
         await installer.checkDependencies();
 
         const projectIp = this.getProjectIpAddress();
@@ -72,13 +72,13 @@ What the script will do:
         await events.trigger('installer:domain:before', {domain: projectDomain, ip: projectIp});
         await installer.registerDomainToIp(projectDomain, projectIp);
 
-        await events.trigger('installer:certificates:before');
+        await events.trigger('installer:certificates:before', undefined);
         await installer.buildCertificate(projectDomain, path.join(paths.projectDir, 'docker', 'certs'));
 
         await this.updateEnvFile(projectIp, projectDomain);
         this._ip.persistNextIpAddress();
 
-        await events.trigger('installer:after');
+        await events.trigger('installer:after', undefined);
 
         console.log('Bringing your project up...');
         await docker.up();

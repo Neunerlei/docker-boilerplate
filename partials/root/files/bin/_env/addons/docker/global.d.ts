@@ -1,7 +1,7 @@
-import type {DockerContext} from './DockerContext.ts';
-import type {Installer} from './installer/Installer.ts';
-import type {ConcreteInstaller} from './installer/concrete/types.ts';
-import type {EnvFile} from '@/env/EnvFile.ts';
+import type {DockerContext} from './DockerContext.js';
+import type {Installer} from './installer/Installer.js';
+import type {ConcreteInstaller} from './installer/concrete/types.js';
+import type {EnvFile} from '@/env/EnvFile.js';
 
 declare module '@/Context.ts' {
     interface Context {

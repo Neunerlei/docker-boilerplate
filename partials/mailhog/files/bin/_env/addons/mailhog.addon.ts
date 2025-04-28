@@ -1,6 +1,6 @@
-import type {AddonEntrypoint} from '@/loadAddons.ts';
-import {executeCommand} from '@/executeCommand.ts';
-import {MailhogContext} from './mailhog/MailhogContext.ts';
+import type {AddonEntrypoint} from '@/loadAddons.js';
+import {executeCommand} from '@/executeCommand.js';
+import {MailhogContext} from './mailhog/MailhogContext.js';
 
 export const addon: AddonEntrypoint = async (context) => ({
     context: async () => ({

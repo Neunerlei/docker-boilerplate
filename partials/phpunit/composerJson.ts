@@ -1,5 +1,5 @@
-import {ObjectBody} from '@builder/filebuilder/body/ObjectBody';
-import type {BodyBuilder} from '@builder/partial/types';
+import {ObjectBody} from '@boiler/filebuilder/body/ObjectBody';
+import type {BodyBuilder} from '@boiler/partial/types';
 
 export const composerJson: BodyBuilder<ObjectBody> = async function (body) {
     body.merge({

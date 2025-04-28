@@ -1,7 +1,7 @@
-import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
-import type {BodyBuilder} from '@builder/partial/types';
+import {DockerfileBody} from '@boiler/filebuilder/body/DockerfileBody';
+import type {BodyBuilder} from '@boiler/partial/types';
 import type {NodeUsage} from './askForUsage.js';
-import type {ServiceSection} from '@builder/filebuilder/body/docker/ServiceSection.js';
+import type {ServiceSection} from '@boiler/filebuilder/body/docker/ServiceSection.js';
 
 export function dockerfile(usage: NodeUsage): BodyBuilder<DockerfileBody> {
     return async function (body, {partial}) {

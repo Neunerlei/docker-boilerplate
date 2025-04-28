@@ -18,7 +18,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # The root directory
 ROOT_DIR="$(realpath "${SCRIPT_DIR}/..")"
 # The directory where the builder sources are stored
-BUILDER_DIR="${ROOT_DIR}/builder"
+BUILDER_DIR="${ROOT_DIR}/boiler"
 # Print debug messages
 VERBOSE=0
 # ==============================???====================
@@ -263,6 +263,15 @@ handle_npm() {
   exit $?
 }
 
+handle_tsc() {
+  [ "$1" != "tsc" ] && return
+  shift
+  cd "$ROOT_DIR"
+  export PATH="$NODE_BIN_DIR:$PATH"
+  "$NPM_BIN" exec -c "tsc --noEmit $@"
+  exit $?
+}
+
 # Main execution
 has_verbose_flag "$@" && VERBOSE=1
 get_system_info
@@ -271,6 +280,7 @@ check_dependencies
 setup_node
 configure_npm
 handle_npm "$@"
+handle_tsc "$@"
 install_dependencies
 
 # Run the Node.js script

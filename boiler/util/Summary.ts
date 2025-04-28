@@ -1,5 +1,5 @@
-import {indentText} from '@builder/util/textUtils.js';
-import type {PartialRegistry} from '@builder/partial/PartialRegistry.js';
+import {indentText} from '@boiler/util/textUtils.js';
+import type {PartialRegistry} from '@boiler/partial/PartialRegistry.js';
 
 export class Summary {
     private readonly _globalMessages: Set<string> = new Set();

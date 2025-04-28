@@ -1,6 +1,6 @@
 import {input} from '@inquirer/prompts';
 import chalk from 'chalk';
-import {uiLogInfoOnce, uiTextBlock} from '@builder/util/uiUtils.js';
+import {uiLogInfoOnce, uiTextBlock} from '@boiler/util/uiUtils.js';
 
 export function askForAlternativeAppSourcesDirectory(
     partialKey: string,

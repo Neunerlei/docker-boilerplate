@@ -1,4 +1,4 @@
-import type {AddonEntrypoint} from '@/loadAddons.ts';
+import type {AddonEntrypoint} from '@/loadAddons.js';
 
 export const addon: AddonEntrypoint = async (context) => ({
     commands: async (program) => {

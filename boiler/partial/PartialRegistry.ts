@@ -1,9 +1,9 @@
 import {PartialDefinition, PartialFactory} from './types';
 import {Partial, type PartialState} from './Partial.js';
 import {BuildContext} from '../util/BuildContext';
-import {PartialSummary} from '@builder/util/Summary.js';
-import {PartialKeySorter} from '@builder/partial/PartialKeySorter.js';
-import {RecursiveRequirementsResolver} from '@builder/partial/RecursiveRequirementsResolver.js';
+import {PartialSummary} from '@boiler/util/Summary.js';
+import {PartialKeySorter} from '@boiler/partial/PartialKeySorter.js';
+import {RecursiveRequirementsResolver} from '@boiler/partial/RecursiveRequirementsResolver.js';
 
 export class PartialRegistry {
     private readonly _context: BuildContext;

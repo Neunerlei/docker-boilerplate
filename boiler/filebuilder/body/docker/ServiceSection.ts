@@ -1,4 +1,4 @@
-import {Hooks} from '@builder/filebuilder/body/docker/PartialHookConsumer.js';
+import {Hooks} from '@boiler/filebuilder/body/docker/PartialHookConsumer.js';
 import {Instructions} from './Instructions';
 
 export class ServiceSection {

@@ -1,5 +1,5 @@
-import {type BodyBuilder} from '@builder/partial/types';
-import {NginxBody, type NginxFileType} from '@builder/filebuilder/body/NginxBody';
+import {type BodyBuilder} from '@boiler/partial/types';
+import {NginxBody, type NginxFileType} from '@boiler/filebuilder/body/NginxBody';
 import type {NodeUsage} from './askForUsage.js';
 
 export function nginxConf(usage: NodeUsage): BodyBuilder<NginxBody> {

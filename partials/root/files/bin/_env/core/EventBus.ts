@@ -1,5 +1,5 @@
-import type {EnvFile} from './env/EnvFile.ts';
-import type {EnvFileDefinition} from './env/EnvFileMigrator.ts';
+import type {EnvFile} from './env/EnvFile.js';
+import type {EnvFileDefinition} from './env/EnvFileMigrator.js';
 import type {Command} from 'commander';
 
 export interface AsyncEventTypes {

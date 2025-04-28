@@ -1,4 +1,4 @@
-import type {ConcreteInstaller} from './types.ts';
+import type {ConcreteInstaller} from './types.js';
 import {promises as fs} from 'fs';
 import {promisify} from 'util';
 import {exec} from 'child_process';
@@ -8,7 +8,7 @@ import {
     downloadFile,
     getMkcertDownloadUrl,
     type LinuxPackageManager
-} from '../utils.ts';
+} from '../utils.js';
 
 const execAsync = promisify(exec);
 

@@ -1,10 +1,10 @@
 import {Command} from 'commander';
-import type {Paths} from './Paths.ts';
-import type {Platform} from './Platform.ts';
-import type {EnvFile} from './env/EnvFile.ts';
-import type {EventBus} from './EventBus.ts';
-import type {PackageInfo} from './PackageInfo.ts';
-import type {CommonUi} from './CommonUi.ts';
+import type {Paths} from './Paths.js';
+import type {Platform} from './Platform.js';
+import type {EnvFile} from './env/EnvFile.js';
+import type {EventBus} from './EventBus.js';
+import type {PackageInfo} from './PackageInfo.js';
+import type {CommonUi} from './CommonUi.js';
 
 export interface Context {
     readonly ui: CommonUi;
@@ -29,7 +29,7 @@ export function createContext(events: EventBus, ui: CommonUi): Context {
                 return target;
             }
             if (prop in target) {
-                return target[prop];
+                return target[prop as unknown as keyof Context];
             }
             throw new Error(`Property ${String(prop)} is not available in the context. Maybe you are to early?`);
         }

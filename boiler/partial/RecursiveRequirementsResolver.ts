@@ -1,4 +1,4 @@
-import type {Partial} from '@builder/partial/Partial.js';
+import type {Partial} from '@boiler/partial/Partial.js';
 
 export class RecursiveRequirementsResolver {
     private _path: string[] = [];

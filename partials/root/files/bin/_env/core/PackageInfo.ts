@@ -1,4 +1,4 @@
-import type {Paths} from './Paths.ts';
+import type {Paths} from './Paths.js';
 import fs from 'node:fs';
 import path from 'node:path';
 

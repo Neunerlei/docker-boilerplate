@@ -1,4 +1,4 @@
-import {joinLines} from '@builder/filebuilder/body/docker/joinLines.js';
+import {joinLines} from '@boiler/filebuilder/body/docker/joinLines.js';
 
 export type WellKnownHooks =
 // This hook should be executed in the "root" section of your partial.

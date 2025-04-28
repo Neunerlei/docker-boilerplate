@@ -1,12 +1,12 @@
-import type {EnvFile} from './EnvFile.ts';
-import type {Paths} from '../Paths.ts';
-import type {EventBus} from '../EventBus.ts';
-import type {EnvFileLine} from './EnvFileLine.ts';
-import {type EnvFileState, loadEnvFileState} from './EnvFileState.ts';
+import type {EnvFile} from './EnvFile.js';
+import type {Paths} from '../Paths.js';
+import type {EventBus} from '../EventBus.js';
+import type {EnvFileLine} from './EnvFileLine.js';
+import {type EnvFileState, loadEnvFileState} from './EnvFileState.js';
 import fs from 'node:fs';
 import chalk from 'chalk';
 import {confirm, input, select} from '@inquirer/prompts';
-import {updateEnvFileHash} from './util.ts';
+import {updateEnvFileHash} from './util.js';
 
 export interface EnvVariableOptions {
     /**

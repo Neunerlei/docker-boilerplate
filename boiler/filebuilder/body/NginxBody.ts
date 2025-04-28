@@ -2,7 +2,7 @@ import {AbstractBody} from './AbstractBody';
 import {BuildContext} from '../../util/BuildContext';
 import {input} from '@inquirer/prompts';
 import {indentText} from '../../util/textUtils';
-import {uiLogInfoOnce, uiTextBlock, uiTextNs} from '@builder/util/uiUtils.js';
+import {uiLogInfoOnce, uiTextBlock, uiTextNs} from '@boiler/util/uiUtils.js';
 
 export const nginxFileTypes = ['prod', 'dev', 'devSsl'] as const;
 export type NginxFileType = typeof nginxFileTypes[number];

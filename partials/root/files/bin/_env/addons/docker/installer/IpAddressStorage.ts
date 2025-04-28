@@ -29,7 +29,7 @@ export class IpAddressStorage {
 
     private longToIp(ip: number): string {
         const ipString = ip.toString(16);
-        const parts = [];
+        const parts: Array<string> = [];
         for (let i = 0; i < 8 - ipString.length; i++) {
             parts.push('0');
         }

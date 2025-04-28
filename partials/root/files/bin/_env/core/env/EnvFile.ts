@@ -1,8 +1,8 @@
-import {type EnvFileState, loadEnvFileState} from './EnvFileState.ts';
-import {EnvFileLine} from './EnvFileLine.ts';
-import {ensureEnvFileExists, envFileHashChanged} from './util.ts';
-import {EnvFileMigrator} from './EnvFileMigrator.ts';
-import type {Context} from '../Context.ts';
+import {type EnvFileState, loadEnvFileState} from './EnvFileState.js';
+import {EnvFileLine} from './EnvFileLine.js';
+import {ensureEnvFileExists, envFileHashChanged} from './util.js';
+import {EnvFileMigrator} from './EnvFileMigrator.js';
+import type {Context} from '../Context.js';
 
 export class EnvFile {
     private readonly _state: EnvFileState;

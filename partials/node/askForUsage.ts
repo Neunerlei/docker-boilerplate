@@ -1,7 +1,7 @@
-import {Partial} from '@builder/partial/Partial.js';
+import {Partial} from '@boiler/partial/Partial.js';
 import {confirm, input} from '@inquirer/prompts';
 import chalk from 'chalk';
-import {uiLogInfo, uiTextBlock, uiTextNsGetter} from '@builder/util/uiUtils.js';
+import {uiLogInfo, uiTextBlock, uiTextNsGetter} from '@boiler/util/uiUtils.js';
 
 export type NodeUsage = {
     runsInProduction: boolean;

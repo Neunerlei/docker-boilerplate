@@ -1,8 +1,8 @@
-import type {Paths} from '../Paths.ts';
+import type {Paths} from '../Paths.js';
 import fs from 'node:fs';
 import {confirm} from '@inquirer/prompts';
 import * as crypto from 'node:crypto';
-import type {EventBus} from '../EventBus.ts';
+import type {EventBus} from '../EventBus.js';
 import chalk from 'chalk';
 
 export async function ensureEnvFileExists(events: EventBus, paths: Paths): Promise<void> {

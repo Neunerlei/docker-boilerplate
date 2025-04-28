@@ -1,9 +1,9 @@
-import type {ConcreteInstaller} from './types.ts';
+import type {ConcreteInstaller} from './types.js';
 import {promisify} from 'util';
 import {exec} from 'child_process';
 import {promises as fs} from 'fs';
 import {confirm} from '@inquirer/prompts';
-import {addToHostsFile} from '../utils.ts';
+import {addToHostsFile} from '../utils.js';
 import chalk from 'chalk';
 
 const execAsync = promisify(exec);

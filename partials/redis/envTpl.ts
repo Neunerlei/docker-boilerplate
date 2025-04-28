@@ -1,5 +1,5 @@
-import type {BodyBuilder} from '@builder/partial/types.ts';
-import type {StringBody} from '@builder/filebuilder/body/StringBody.ts';
+import type {BodyBuilder} from '@boiler/partial/types.js';
+import type {StringBody} from '@boiler/filebuilder/body/StringBody.js';
 
 export const envTpl: BodyBuilder<StringBody> = async (body) => {
     body.append(`

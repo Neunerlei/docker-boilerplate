@@ -1,7 +1,7 @@
 import {Paths} from './Paths';
 import {IFs} from 'memfs';
 import {PartialRegistry} from '../partial/PartialRegistry';
-import type {Summary} from '@builder/util/Summary.js';
+import type {Summary} from '@boiler/util/Summary.js';
 
 export class BuildContext {
     private readonly _paths: Paths;

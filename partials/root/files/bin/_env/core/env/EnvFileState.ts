@@ -1,5 +1,5 @@
 import fs from 'node:fs';
-import {EnvFileLine} from './EnvFileLine.ts';
+import {EnvFileLine} from './EnvFileLine.js';
 
 export function loadEnvFileState(filename: string): EnvFileState {
     return new EnvFileState(

@@ -1,4 +1,4 @@
-import type {Context} from '@/Context.ts';
+import type {Context} from '@/Context.js';
 
 export class MailhogContext {
     private readonly _context: Context;
@@ -8,6 +8,6 @@ export class MailhogContext {
     }
 
     public get port(): string {
-        return this._context.env.getGlobal('MAILHOG_PORT', '8025');
+        return this._context.env.getGlobal('MAILHOG_PORT', '8025')!;
     }
 }

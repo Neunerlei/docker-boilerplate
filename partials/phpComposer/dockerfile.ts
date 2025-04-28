@@ -1,5 +1,5 @@
-import type {BodyBuilder} from '@builder/partial/types.ts';
-import type {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody.ts';
+import type {BodyBuilder} from '@boiler/partial/types.js';
+import type {DockerfileBody} from '@boiler/filebuilder/body/DockerfileBody.js';
 
 export const dockerfile: BodyBuilder<DockerfileBody> = async (body) => {
     // Add composer to dev image

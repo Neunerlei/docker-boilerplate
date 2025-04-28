@@ -1,6 +1,6 @@
-import type {BodyBuilder} from '@builder/partial/types.ts';
-import type {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody.ts';
-import {envRedisDockerComposeEnvironmentDefinition} from './envTpl.ts';
+import type {BodyBuilder} from '@boiler/partial/types.js';
+import type {DockerComposeBody} from '@boiler/filebuilder/body/DockerComposeBody.js';
+import {envRedisDockerComposeEnvironmentDefinition} from './envTpl.js';
 
 export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
     body.setService('redis', {

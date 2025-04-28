@@ -1,4 +1,4 @@
-import {PartialDefinition} from '@builder/partial/types';
+import {PartialDefinition} from '@boiler/partial/types';
 import {envTpl} from './envTpl';
 import {dockerComposeYml} from './dockerComposeYml';
 

@@ -1,4 +1,4 @@
-import type {MailhogContext} from './MailhogContext.ts';
+import type {MailhogContext} from './MailhogContext.js';
 
 declare module '@/Context.ts' {
     interface Context {

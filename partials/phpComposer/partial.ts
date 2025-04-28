@@ -1,7 +1,7 @@
-import {Partial} from '@builder/partial/Partial.js';
-import {PartialDefinition} from '@builder/partial/types';
-import {replaceInFile} from '@builder/util/textUtils';
-import {dockerfile} from './dockerfile.ts';
+import {Partial} from '@boiler/partial/Partial.js';
+import {PartialDefinition} from '@boiler/partial/types';
+import {replaceInFile} from '@boiler/util/textUtils';
+import {dockerfile} from './dockerfile.js';
 
 export default function (partial: Partial): PartialDefinition {
     return {

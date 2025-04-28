@@ -1,11 +1,11 @@
-import type {EventBus} from './EventBus.ts';
-import type {EnvFileDefinition} from './env/EnvFileMigrator.ts';
+import type {EventBus} from './EventBus.js';
+import type {EnvFileDefinition} from './env/EnvFileMigrator.js';
 import type {Command} from 'commander';
-import {type Context, extendContext} from './Context.ts';
+import {type Context, extendContext} from './Context.js';
 import {glob} from 'glob';
 import fs from 'node:fs';
 import path from 'node:path';
-import type {EnvFile} from './env/EnvFile.ts';
+import type {EnvFile} from './env/EnvFile.js';
 
 export interface AddonUiConfig {
     /**
@@ -134,12 +134,13 @@ async function applyEvents(events: EventBus, config: AddonConfig) {
 }
 
 async function applyEnvDefinition(events: EventBus, config: AddonConfig) {
-    if (typeof config.env !== 'function') {
+    const _env = config.env;
+    if (typeof _env !== 'function') {
         return;
     }
 
     events.on('env:define', async ({definition, envFile}) => {
-        await config.env(definition, envFile);
+        await _env(definition, envFile);
     });
 }
 
@@ -151,22 +152,23 @@ async function applyUiCustomizing(events: EventBus, config: AddonConfig) {
     const ui = await config.ui();
 
     if (ui.helpHeader) {
-        events.onSync('ui:filter:helpHeader', v => v.value = ui.helpHeader);
+        events.onSync('ui:filter:helpHeader', v => v.value = ui.helpHeader + '');
     }
     if (ui.helpDescription) {
-        events.onSync('ui:filter:helpDescription', v => v.value = ui.helpDescription);
+        events.onSync('ui:filter:helpDescription', v => v.value = ui.helpDescription + '');
     }
     if (ui.errorHeader) {
-        events.onSync('ui:filter:errorHeader', v => v.value = ui.errorHeader);
+        events.onSync('ui:filter:errorHeader', v => v.value = ui.errorHeader + '');
     }
 }
 
 async function applyCommands(events: EventBus, config: AddonConfig) {
-    if (typeof config.commands !== 'function') {
+    const commands = config.commands;
+    if (typeof commands !== 'function') {
         return;
     }
 
     events.on('commands:define', async ({program}) => {
-        await config.commands(program);
+        await commands(program);
     });
 }
