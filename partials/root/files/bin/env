@@ -311,9 +311,9 @@ set_node_paths
 check_dependencies
 setup_node
 configure_npm
-handle_env_npm "$@"
+handle_bin_npm "$@"
 install_dependencies
-handle_env_tsc "$@"
+handle_bin_tsc "$@"
 
 # Run the Node.js script
 [ $VERBOSE -eq 1 ] && echo "Running Node.js script..."
