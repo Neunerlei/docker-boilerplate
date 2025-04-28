@@ -1,11 +1,11 @@
-import {checkbox} from "@inquirer/prompts";
-import {askForVersionOfPartial} from "./askForVersionOfPartial";
-import {BuildContext} from "../util/BuildContext";
+import {checkbox} from '@inquirer/prompts';
+import {askForVersionOfPartial} from './askForVersionOfPartial';
+import {BuildContext} from '../util/BuildContext';
+import {uiLogInfo, uiTextBlock} from '@builder/util/uiUtils.js';
 
 export async function askForAdditionalPartials(context: BuildContext) {
-    const registry = context.getPartialRegistry();
-    const stack = context.getPartialStack();
-    const possiblePartials = await registry.getNonStandaloneForSelectedStandaloneKeys(stack.getKeys());
+    const {partials: partialRegistry} = context;
+    const possiblePartials = await partialRegistry.nonStandaloneForUsed;
 
     if (possiblePartials.length === 0) {
         return;
@@ -16,14 +16,16 @@ export async function askForAdditionalPartials(context: BuildContext) {
         value: partial.key
     }));
 
-    const selected = await checkbox({
-        message: 'You can also add the following tools:',
+    uiLogInfo(uiTextBlock(`After selecting the main technologies, you can now add additional tools to your environment.
+    Note, that not all tools are available for all technologies. This step is optional, just press enter to skip.`), 'Additional tools and services');
+
+    const used = await checkbox({
+        message: 'Choose your toolbelt:',
         choices
     });
 
-    for (const key of selected) {
-        const partial = registry.get(key)!;
-        await askForVersionOfPartial(partial, context);
-        await stack.add(partial);
+    for (const key of used) {
+        await partialRegistry.use(key);
+        await askForVersionOfPartial(partialRegistry.get(key)!, partialRegistry);
     }
 }

@@ -76,6 +76,7 @@ export const addon: AddonEntrypoint = async (context) => ({
             .allowUnknownOption(true)
             .action((options, command) => context.docker.restart({
                 follow: options.attach,
+                force: options.force,
                 args: command.args
             }).then());
 
@@ -125,10 +126,20 @@ export const addon: AddonEntrypoint = async (context) => ({
             });
 
         program
-            .command('docker:build:prod')
-            .description('Builds the production image for the project')
-            .option('--tag <tag>', 'Tag to use for the image', context.docker.projectName)
-            .action(async (options) => {
+            .command('docker:build')
+            .description('Builds an image from the Dockerfile of the project')
+            .option('--image <image>', 'Image to use for the build')
+            .option('--target <target>', 'Target to use for the build')
+            .option('--tag <tag>', 'Tag to use for the image')
+            .allowExcessArguments(true)
+            .allowUnknownOption(true)
+            .action(async (options, command) => {
+                await context.docker.build({
+                    imageName: options.image || undefined,
+                    target: options.target || undefined,
+                    tag: options.tag || undefined,
+                    args: command.args
+                });
                 await context.docker.executeDockerCommand(
                     ['build', '--target', 'app_prod', '--pull', '-t', options.tag, context.paths.projectDir],
                     {foreground: true}

@@ -1,9 +1,9 @@
-import {PartialContext} from '@builder/partial/PartialContext';
+import {Partial} from '@builder/partial/Partial.js';
 import {PartialDefinition} from '@builder/partial/types';
 import {replaceInFile} from '@builder/util/textUtils';
 import {dockerfile} from './dockerfile.ts';
 
-export default function (context: PartialContext): PartialDefinition {
+export default function (partial: Partial): PartialDefinition {
     return {
         key: 'phpComposer',
         name: 'PHP Composer',
@@ -15,7 +15,7 @@ export default function (context: PartialContext): PartialDefinition {
         },
         buildFiles: async (fs, fb) => {
             await fb('composer.json')
-                .setDestinationDirToService('php')
+                .setDestinationDirToPartial('php')
                 .setContent({
                     'name': 'boilerplate/project',
                     'description': 'A boilerplate for creating new projects',
@@ -33,8 +33,8 @@ export default function (context: PartialContext): PartialDefinition {
                     '%PHP_PATH%'
                 ],
                 [
-                    context.getBuildContext().getRealPartialKey('php'),
-                    context.getBuildContext().getPartialDir('php')
+                    partial.key,
+                    partial.outputDirectory
                 ]
             );
         },

@@ -2,10 +2,9 @@ import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
 import type {BodyBuilder} from '@builder/partial/types.ts';
 
 export const dockerfileFpmDebian: BodyBuilder<DockerfileBody> =
-    async function (body, _, context) {
+    async function (body, {partial}) {
         const php = body.add('php');
-        const version = context.getPartialVersion('php');
-        const appSource = context.getPartialDir('php');
+        const {version, outputDirectory} = partial;
 
         const image = 'neunerlei/php:' + version + '-fpm-debian';
 
@@ -24,6 +23,7 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
     apt-get update && apt-get upgrade -y && apt-get install -y \\
     sudo
 `)
+            .addFromHook('root:dependencies')
             .add('run.replacePhpIni', `
 # Because we inherit from the prod image, we don't actually want the prod settings
 COPY docker/php/config/php.dev.ini /usr/local/etc/php/conf.d/zzz.app.dev.ini
@@ -50,12 +50,14 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
             .add('user.wwwData', 'USER www-data')
             .add('copy.sources', `
 # Add the app sources
-COPY --chown=www-data:www-data .${appSource} .
+COPY --chown=www-data:www-data .${outputDirectory} .
 `)
+            .addFromHook('prod:copy')
             .add('run.binaryPermissions', `
 # Ensure correct permissions on the binaries
 RUN find /var/www/html/bin -type f -iname "*.sh" -exec chmod +x {} \\; || true
 `)
+            .addFromHook('php:composer-autoload')
             .add('user.root', 'USER root');
     };
 

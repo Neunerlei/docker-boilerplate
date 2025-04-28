@@ -1,13 +1,17 @@
 import {SortedKeyedList} from '../../../util/SortedKeyedList';
+import {ServiceSectionHookProvider, type WellKnownHooks} from '@builder/filebuilder/body/docker/PartialHookConsumer.js';
+import {joinLines} from '@builder/filebuilder/body/docker/joinLines.js';
 
 export class Instructions {
-    private readonly _list: SortedKeyedList<string, string> = new SortedKeyedList();
+    private readonly _list: SortedKeyedList<string, string | { toString(): string }> = new SortedKeyedList();
     private readonly _rootAlias: string;
     private readonly _serviceAlias: string;
+    private readonly _hooks: ServiceSectionHookProvider;
 
-    public constructor(rootAlias: string, serviceAlias: string) {
+    public constructor(rootAlias: string, serviceAlias: string, hooks: ServiceSectionHookProvider) {
         this._rootAlias = rootAlias;
-        this._serviceAlias = serviceAlias
+        this._serviceAlias = serviceAlias;
+        this._hooks = hooks;
     }
 
     public has(key: string): boolean {
@@ -15,7 +19,7 @@ export class Instructions {
     }
 
     public get(key: string): string | undefined {
-        return this._list.get(key)?.trim();
+        return this._list.get(key)?.toString().trim();
     }
 
     public addDefaultFrom(override?: boolean): this {
@@ -38,13 +42,19 @@ export class Instructions {
         return this;
     }
 
+    public addFromHook(hookName: WellKnownHooks | string): this {
+        this._list.add('hook.' + hookName, this._hooks.getHook(hookName));
+        return this;
+    }
+
     public remove(key: string): this {
         this._list.remove(key);
         return this;
     }
 
     public getInstructions(): [string, string][] {
-        return this._list.entries().map(([key, value]) => [key, value.trim()]);
+        return this._list.entries()
+            .map(([key, value]) => [key, value.toString().trim()]);
     }
 
     public getKeys(): string[] {
@@ -52,7 +62,7 @@ export class Instructions {
     }
 
     public toString(): string {
-        return this._list.values().map(v => v.trim()).join('\n\n');
+        return joinLines(this._list.values());
     }
 
     public clear(): void {

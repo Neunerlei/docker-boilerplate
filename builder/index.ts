@@ -1,38 +1,39 @@
 import {PartialRegistry} from './partial/PartialRegistry';
-import {PartialStack} from './partial/PartialStack';
 import {Paths} from './util/Paths';
 import {BuildContext} from './util/BuildContext';
 import PrettyError from 'pretty-error';
 import {memfs} from 'memfs';
-import {RecursiveRequirementsResolver} from './partial/RecursiveRequirementsResolver';
 import {doRegisterAvailablePartials} from './actions/doRegisterAvailablePartials';
-import {doAddRootPartialToStack} from './actions/doAddRootPartialToStack';
+import {doAddRootPartial} from './actions/doAddRootPartial.js';
 import {askForAtLeastOneStandalonePartial} from './actions/askForAtLeastOneStandalonePartial';
 import {askForAdditionalPartials} from './actions/askForAdditionalPartials';
 import {PartialDefinition} from './partial/types';
-import {doDumpFilesToOutput} from './actions/doDumpFilesToOutput';
 import {FsUtils} from './util/FsUtils';
 import {doBuildFiles} from './actions/doBuildFiles';
 import {doFinalizeEnvScript} from './actions/doFinalizeEnvScript';
+import {doShowSummary} from '@builder/actions/doShowSummary.js';
+import {Summary} from '@builder/util/Summary.js';
+import process from 'node:process';
+import {doDumpFilesToOutput} from '@builder/actions/doDumpFilesToOutput.js';
 
 await (async function index() {
     try {
         const paths = new Paths(import.meta.filename);
         const fs = memfs().fs;
-        const context = new BuildContext(paths, fs, (): PartialRegistry => registry, (): PartialStack => stack);
+        const summary = new Summary();
+        const context = new BuildContext(paths, fs, (): PartialRegistry => registry, summary);
         const registry = new PartialRegistry(context);
-        const stack = new PartialStack(new RecursiveRequirementsResolver(context));
 
         await doRegisterAvailablePartials(paths, registry);
-        await doAddRootPartialToStack(stack, registry);
+        await doAddRootPartial(registry);
         await askForAtLeastOneStandalonePartial(context);
         await askForAdditionalPartials(context);
 
-        const partials = (await stack.getSortedKeys()).map(key => registry.get(key)!);
+        const partials = await registry.sortedUsed;
 
         const runForEachPartial = async (fn: (partial: PartialDefinition) => Promise<void>) => {
             for (const partial of partials) {
-                await fn(partial);
+                await fn(partial.definition);
             }
         };
 
@@ -50,6 +51,7 @@ await (async function index() {
 
         doDumpFilesToOutput(fs, paths);
         doFinalizeEnvScript(paths);
+        await doShowSummary(context);
 
         process.exit(0);
     } catch (e) {

@@ -1,14 +1,13 @@
 import {type BodyBuilder} from '@builder/partial/types';
 import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
+import type {NodeUsage} from './askForUsage.js';
 
-export function dockerComposeYml(handlesWebTraffic: boolean): BodyBuilder<DockerComposeBody> {
-    return async (body, _, context) => {
-        const key = context.getRealPartialKey('node');
-        const appSource = context.getPartialDir('node');
+export function dockerComposeYml(usage: NodeUsage): BodyBuilder<DockerComposeBody> {
+    return async (body, {partial}) => {
+        const {key, outputDirectory} = partial;
 
         const service: Record<any, any> = {
-            container_name: '${PROJECT_NAME}-' + key,
-            image: '${PROJECT_NAME}-' + key + ':dev',
+            image: '${COMPOSE_PROJECT_NAME}-' + key + ':dev',
             build: {
                 context: '.',
                 target: key + '_dev',
@@ -20,7 +19,7 @@ export function dockerComposeYml(handlesWebTraffic: boolean): BodyBuilder<Docker
             },
             restart: 'no',
             volumes: [
-                '.' + appSource + ':/var/www/html',
+                '.' + outputDirectory + ':/var/www/html',
                 './docker/node/node.entrypoint.dev.sh:/usr/bin/app/entrypoint.sh'
             ],
             environment: [
@@ -32,16 +31,16 @@ export function dockerComposeYml(handlesWebTraffic: boolean): BodyBuilder<Docker
             ]
         };
 
-        if (handlesWebTraffic) {
+        if (usage.handlesWebTraffic) {
             service.healthcheck = {
-                test: 'curl --fail http://localhost:8000 || exit 1',
+                test: `curl --fail http://localhost:${usage.port} || exit 1`,
                 interval: '10s',
                 timeout: '5s',
                 retries: 3,
                 start_period: '10s'
             };
             service.ports = [
-                '${DOCKER_PROJECT_IP:-127.0.0.1}:8000:8000'
+                `\${DOCKER_PROJECT_IP:-127.0.0.1}:${usage.port}:${usage.port}`
             ];
         }
 

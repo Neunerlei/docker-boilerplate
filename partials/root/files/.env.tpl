@@ -1,1 +1,1 @@
-PROJECT_NAME=replace-me
+COMPOSE_PROJECT_NAME=replace-me

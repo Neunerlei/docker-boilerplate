@@ -13,7 +13,14 @@ export async function ensureEnvFileExists(events: EventBus, paths: Paths): Promi
         });
 
         if (!fs.existsSync(paths.envFileTemplatePath)) {
-            throw new Error(`The .env file is missing, and there is no "${paths.envFileTemplatePath}" to copy from.`);
+            if (!await confirm({
+                message: `The .env file is missing, as there is no template to copy from, should I create an empty .env file?`
+            })) {
+                throw new Error('You can not continue without an .env file, sorry');
+            }
+
+            fs.writeFileSync(paths.envFilePath, '', 'utf-8');
+            return;
         }
 
         if (!await confirm({

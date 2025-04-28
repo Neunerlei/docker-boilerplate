@@ -1,14 +1,11 @@
-import {PartialContext} from './PartialContext.js';
+import {Partial} from './Partial.js';
 import {PartialSortRules} from './PartialSortRules.js';
 import {IFs} from 'memfs';
 import {FsUtils} from '../util/FsUtils.js';
 import {FileBuilder} from '../filebuilder/FileBuilder.js';
-import type {BuildContext} from '../util/BuildContext.js';
 import {BodyBuilderCollector} from '../filebuilder/BodyBuilderCollector.js';
 
-export type PartialList = Record<string, PartialDefinition>;
-
-export type BodyBuilder<T = any> = (body: T, filename: string, context: BuildContext) => Promise<void>;
+export type BodyBuilder<T = any> = (body: T, context: { filename: string, partial: Partial }) => Promise<void>;
 
 export interface PartialDefinition {
     /**
@@ -53,7 +50,7 @@ export interface PartialDefinition {
      * Can be set to "false", indicating it should never be selectable by a user, which means it can only be registered as a dependency using "requires" of another partial.
      * @param selectedKeys
      */
-    selectable?: ((selectedKeys: string[]) => Promise<boolean>) | false;
+    selectable?: ((usedKeys: string[]) => Promise<boolean>) | false;
 
     /**
      * Loads all files that this partial should provide into the provided file system.
@@ -100,4 +97,4 @@ export interface PartialDefinition {
     applyPost?: () => Promise<void>;
 }
 
-export type Partial = ((context: PartialContext) => PartialDefinition) & { __partialId?: Symbol };
+export type PartialFactory = ((partial: Partial) => PartialDefinition);

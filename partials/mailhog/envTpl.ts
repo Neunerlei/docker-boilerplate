@@ -1,7 +1,7 @@
-import {FileBuilderCallback} from '@builder/partial/types';
+import {type BodyBuilder} from '@builder/partial/types';
 import {StringBody} from '@builder/filebuilder/body/StringBody';
 
-export const envTpl: FileBuilderCallback<StringBody> = async function (body) {
+export const envTpl: BodyBuilder<StringBody> = async function (body) {
     body.append(`
 # Mailhog - Mailtrap
 # ------------------------------------------------

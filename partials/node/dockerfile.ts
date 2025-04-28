@@ -1,20 +1,21 @@
 import {DockerfileBody} from '@builder/filebuilder/body/DockerfileBody';
-import {PartialContext} from '@builder/partial/PartialContext';
 import type {BodyBuilder} from '@builder/partial/types';
+import type {NodeUsage} from './askForUsage.js';
+import type {ServiceSection} from '@builder/filebuilder/body/docker/ServiceSection.js';
 
-export function dockerfile(context: PartialContext): BodyBuilder<DockerfileBody> {
-    return async function (body) {
-        const node = body.getForContext(context);
-        const version = context.getVersion() ?? context.getDefinition().versions![0];
-        const appSource = context.getBuildContext().getPartialDir(context.getKey());
+export function dockerfile(usage: NodeUsage): BodyBuilder<DockerfileBody> {
+    return async function (body, {partial}) {
+        const node = body.getForPartial(partial);
+        const outputDirectory = partial.outputDirectory;
 
-        const image = 'node:' + version + '-bookworm';
+        const image = 'node:' + partial.version + '-bookworm';
 
         node.setCommonRootInstructions(image);
 
         // ROOT
         // ==========================================================
         node.getRoot()
+            .addFromHook('root:dependencies')
             .add('workdir', 'WORKDIR /var/www/html');
 
         // DEV
@@ -37,7 +38,7 @@ RUN (userdel -r $(getent passwd "\${DOCKER_UID}" | cut -d: -f1) || true) && \\
     groupdel -f www-data || true && \\
     userdel -r www-data || true && \\
     groupadd -g \${DOCKER_GID} www-data && \\
-    useradd -u \${DOCKER_UID} -g www-data www-data
+    useradd -u \${DOCKER_UID} -g www-data -m www-data
 `)
             .add('copy.entrypoint', 'COPY docker/node/node.entrypoint.dev.sh /usr/bin/app/entrypoint.sh')
             .add('run.entrypointPermissions', 'RUN chmod +x /usr/bin/app/entrypoint.sh')
@@ -46,19 +47,61 @@ RUN (userdel -r $(getent passwd "\${DOCKER_UID}" | cut -d: -f1) || true) && \\
 
         // PROD
         // ==========================================================
-        node.getProd()
-            .addDefaultFrom()
-            .add('copy.sources', `
+        if (usage.prodImageType === 'standalone') {
+            defineStandaloneProdStep(node, outputDirectory);
+        } else if (usage.prodImageType === 'copy') {
+            defineCopyProdStep(body, node, outputDirectory, usage);
+        } else if (usage.prodImageType === 'static') {
+            defineStaticProdStep(node, outputDirectory, usage);
+        }
+    };
+}
+
+function defineStandaloneProdStep(node: ServiceSection, appSource: string): void {
+    node.getProd()
+        .addDefaultFrom()
+        .add('copy.sources', `
 # Add the app sources
 COPY --chown=www-data:www-data .${appSource} .
 `)
-            .add('run.binaryPermissions', `
+        .addFromHook('prod:copy')
+        .add('run.binaryPermissions', `
 # Ensure correct permissions on the binaries
 RUN find /var/www/html/bin -type f -iname "*.sh" -exec chmod +x {} \\;
 `)
-            .add('user.root', 'USER root')
-            .add('entrypoint', 'ENTRYPOINT [ "npm", "run", "prod" ]')
-        ;
+        .add('run.install', 'RUN npm ci')
+        .add('user.root', 'USER root')
+        .add('entrypoint', 'ENTRYPOINT [ "npm", "run", "prod" ]')
+    ;
+}
 
-    };
+function defineCopyProdStep(body: DockerfileBody, node: ServiceSection, outputDirectory: string, usage: NodeUsage): void {
+    defineBuilderStep(node, outputDirectory);
+    body.addHook('app', 'prod:copy', `
+# Copy the build files
+COPY --chmod=a+r --from=${node.getAlias('builder')} ${usage.copyPathSource} ${usage.copyPathTarget}
+`);
+}
+
+function defineStaticProdStep(node: ServiceSection, outputDirectory: string, usage: NodeUsage): void {
+    defineBuilderStep(node, outputDirectory);
+    node.getProd()
+        .add('from', 'FROM busybox:latest AS ' + node.getProdAlias())
+        .add('workdir', 'WORKDIR ' + usage.copyPathTarget)
+        .add('copy.node', `
+# Copy the build files
+COPY --chmod=a+r --from=${node.getAlias('builder')} ${usage.copyPathSource} ${usage.copyPathTarget}`)
+        .add('volume', 'VOLUME ' + usage.copyPathTarget);
+}
+
+function defineBuilderStep(node: ServiceSection, outputDirectory: string): void {
+    node.get('builder')
+        .addDefaultFrom()
+        .add('copy.sources', `
+# Add the app sources
+COPY --chown=www-data:www-data .${outputDirectory} .
+`)
+        .addFromHook('prod:copy')
+        .add('run.install', 'RUN npm ci')
+        .add('run.build', 'RUN npm run build');
 }

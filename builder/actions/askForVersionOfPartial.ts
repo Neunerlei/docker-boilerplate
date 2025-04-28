@@ -1,9 +1,9 @@
-import {PartialDefinition} from "../partial/types";
-import {BuildContext} from "../util/BuildContext";
-import {select} from "@inquirer/prompts";
+import {select} from '@inquirer/prompts';
+import type {Partial} from '@builder/partial/Partial.js';
+import type {PartialRegistry} from '@builder/partial/PartialRegistry.js';
 
-export async function askForVersionOfPartial(partial: PartialDefinition, context: BuildContext) {
-    const versions = partial.versions;
+export async function askForVersionOfPartial(partial: Partial, partialRegistry: PartialRegistry) {
+    const {versions, key} = partial.definition;
 
     // Ignore if there are no versions
     if (!versions || !versions.length) {
@@ -12,17 +12,12 @@ export async function askForVersionOfPartial(partial: PartialDefinition, context
 
     // If only one version exists, set it and return
     if (versions.length === 1) {
-        context.setPartialVersion(partial.key, versions[0]);
-        return;
-    }
-
-    // If version is already set, return
-    if (context.getPartialVersion(partial.key)) {
+        partialRegistry.useVersionOf(key, versions[0]);
         return;
     }
 
     // Ask for the version
-    const choices = versions.map((version, index) => ({
+    const choices = versions.map((version) => ({
         name: version,
         value: version
     }));
@@ -32,5 +27,5 @@ export async function askForVersionOfPartial(partial: PartialDefinition, context
         choices
     });
 
-    context.setPartialVersion(partial.key, selectedVersion);
+    partialRegistry.useVersionOf(key, selectedVersion);
 }

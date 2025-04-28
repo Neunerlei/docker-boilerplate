@@ -1,12 +1,13 @@
-import {checkbox} from "@inquirer/prompts";
-import {askForVersionOfPartial} from "./askForVersionOfPartial";
-import {BuildContext} from "../util/BuildContext";
-import {askForMainAppPartial} from "./askForMainAppPartial";
+import {checkbox} from '@inquirer/prompts';
+import {askForVersionOfPartial} from './askForVersionOfPartial';
+import {BuildContext} from '../util/BuildContext';
+import {askForAppPartial} from './askForAppPartial.js';
+import {uiLogInfo, uiTextBlock} from '@builder/util/uiUtils.js';
+import chalk from 'chalk';
 
 export async function askForAtLeastOneStandalonePartial(context: BuildContext) {
-    const registry = context.getPartialRegistry();
-    const stack = context.getPartialStack();
-    const availablePartials = registry.getStandalone().filter(partial => partial.selectable !== false);
+    const {partials: partialRegistry} = context;
+    const availablePartials = partialRegistry.getStandalone().filter(partial => partial.selectable !== false);
 
     if (availablePartials.length === 0) {
         console.log('No standalone partials found. Please add at least one to the project.');
@@ -18,6 +19,10 @@ export async function askForAtLeastOneStandalonePartial(context: BuildContext) {
         value: partial.key
     }));
 
+    uiLogInfo(uiTextBlock(`To get started you need to select some technologies you want to work with.
+    Each technology is represented by a docker ${chalk.bold('service')} in the created environment. 
+    Feel free to select a single or multiple services.`), 'Services, technologies and the app');
+
     const selected = await checkbox({
         message: 'Choose at least one of the following technologies:',
         choices,
@@ -25,10 +30,9 @@ export async function askForAtLeastOneStandalonePartial(context: BuildContext) {
     });
 
     for (const key of selected) {
-        const partial = registry.get(key)!;
-        await askForVersionOfPartial(partial, context);
-        await stack.add(partial);
+        await partialRegistry.use(key);
+        await askForVersionOfPartial(partialRegistry.get(key)!, partialRegistry);
     }
 
-    await askForMainAppPartial(context, registry, selected);
+    await askForAppPartial(partialRegistry);
 }

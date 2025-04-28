@@ -2,14 +2,14 @@ import type {BodyBuilder} from '@builder/partial/types.ts';
 import type {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody.ts';
 import {envRedisDockerComposeEnvironmentDefinition} from './envTpl.ts';
 
-export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
+export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
     body.setService('redis', {
-        container_name: '${PROJECT_NAME}-redis',
-        image: 'redis:' + context.getPartialVersion('redis'),
+        image: 'redis:' + partial.version,
         restart: 'always',
         volumes: [
             'redis_data:/root/redis'
         ],
+
         environment: envRedisDockerComposeEnvironmentDefinition()
     });
 

@@ -1,10 +1,21 @@
-import {input} from "@inquirer/prompts";
+import {input} from '@inquirer/prompts';
+import chalk from 'chalk';
+import {uiLogInfoOnce, uiTextBlock} from '@builder/util/uiUtils.js';
 
 export function askForAlternativeAppSourcesDirectory(
-    partialKey: string
+    partialKey: string,
+    appPartialKey: string
 ): Promise<string> {
+    uiLogInfoOnce(
+        'app.sources.directory',
+        uiTextBlock(`Multiple services want to create an "app" directory. 
+To avoid conflicts, we need to make sure that only the "main" service ${chalk.bold(appPartialKey)} uses it.
+For all other services, you will be asked to provide an alternative directory name.`),
+        'Service directories'
+    );
+
     return input({
-        message: `The service "${partialKey}" is not registered as the default service, but wants to add an "app" directory. To avoid conflicts, please specify an alternative directory name:`,
+        message: `The service "${partialKey}" is not the "main" service, to avoid conflicts, please set an alternative directory:`,
         default: partialKey,
         validate: (input: string) => {
             if (input.trim() === '') {

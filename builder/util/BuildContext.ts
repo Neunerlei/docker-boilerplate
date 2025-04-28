@@ -1,77 +1,47 @@
-import {Paths} from "./Paths";
-import {IFs} from "memfs";
+import {Paths} from './Paths';
+import {IFs} from 'memfs';
 import {PartialRegistry} from '../partial/PartialRegistry';
-import {PartialStack} from '../partial/PartialStack';
+import type {Summary} from '@builder/util/Summary.js';
 
 export class BuildContext {
     private readonly _paths: Paths;
     private readonly _fs: IFs;
-    private readonly _partialVersions: Map<string, string>;
-    private readonly _partialDirs: Map<string, string>;
     private readonly _registryResolver: () => PartialRegistry;
-    private readonly _stackResolver: () => PartialStack;
+    private readonly _summary: Summary;
     private _registry: PartialRegistry | undefined;
-    private _stack: PartialStack | undefined
-    private _appPartialKey: string;
 
     public constructor(
         paths: Paths,
         fs: IFs,
         registryResolver: () => PartialRegistry,
-        stackResolver: () => PartialStack
+        summary: Summary
     ) {
         this._paths = paths;
         this._fs = fs;
-        this._partialVersions = new Map();
-        this._partialDirs = new Map();
         this._registryResolver = registryResolver;
-        this._stackResolver = stackResolver;
+        this._summary = summary;
     }
 
-    public getPaths(): Paths {
+    /**
+     * Returns an object containing all relevant filesystem paths for this environment.
+     */
+    public get paths(): Paths {
         return this._paths;
     }
 
-    public getFs(): IFs {
+    /**
+     * Returns the instance of the memory filesystem used to collect all files for the generated environment
+     * before dumping them to the output directory.
+     */
+    public get fs(): IFs {
         return this._fs;
     }
 
-    public getAppPartialKey(): string {
-        if (!this._appPartialKey) {
-            throw new Error('Main partial is not set');
-        }
-
-        return this._appPartialKey;
-    }
-
-    public setAppPartialKey(value: string) {
-        this._appPartialKey = value!;
-    }
-
-    public getRealPartialKey(key: string): string {
-        if (key === this._appPartialKey) {
-            return 'app';
-        }
-        return key;
-    }
-
-    public getPartialVersion(partial: string): string {
-        return this._partialVersions.get(partial) ?? this.getPartialRegistry().get(partial)?.versions?.[0] ?? 'latest';
-    }
-
-    public setPartialVersion(partial: string, version: string): void {
-        this._partialVersions.set(partial, version);
-    }
-
-    public getPartialDir(partial: string, defaultValue?: string): string {
-        return this._partialDirs.get(partial) ?? defaultValue ?? '/app';
-    }
-
-    public setPartialDir(partial: string, directory: string): void {
-        this._partialDirs.set(partial, directory);
-    }
-
-    public getPartialRegistry(): PartialRegistry {
+    /**
+     * Returns the partial registry, which holds all partials, information on their usage and it tracks the
+     * selected "app" partial.
+     */
+    public get partials(): PartialRegistry {
         if (!this._registry) {
             this._registry = this._registryResolver();
         }
@@ -79,11 +49,11 @@ export class BuildContext {
         return this._registry;
     }
 
-    public getPartialStack(): PartialStack {
-        if (!this._stack) {
-            this._stack = this._stackResolver();
-        }
-
-        return this._stack;
+    /**
+     * The summary is shown at the end of the build process. It contains information about the used partials,
+     * their versions and the output directory.
+     */
+    public get summary(): Summary {
+        return this._summary;
     }
 }

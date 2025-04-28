@@ -2,10 +2,9 @@ import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
 import type {BodyBuilder} from '@builder/partial/types';
 import {envMysqlDockerComposeEnvironmentSelfDefinition} from './envTpl.ts';
 
-export const dockerComposeYmlBefore: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
+export const dockerComposeYmlBefore: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
     body.setService('mysql', {
-        container_name: '${PROJECT_NAME}-mysql',
-        image: 'mysql:' + context.getPartialVersion('mysql'),
+        image: 'mysql:' + partial.version,
         command: [
             '--default-authentication-plugin=mysql_native_password',
             '--max_connections=2000'

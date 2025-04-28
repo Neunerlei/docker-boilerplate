@@ -1,4 +1,0 @@
-services:
-  builder:
-    entrypoint: bash
-    tty: true

@@ -24,7 +24,7 @@ export interface EnvVariableOptions {
      * The default value to use if no value could be resolved.
      * If not set, the user will be prompted for a value if needed.
      */
-    default?: string | ((templateValue: string | undefined) => Promise<string>)
+    default?: string | ((templateValue: string | undefined, replacedValue?: string) => Promise<string>)
 
     /**
      * Allows you to determine if the variable needs to be updated.
@@ -63,6 +63,17 @@ export interface EnvVariableOptions {
      * @param input
      */
     validate?: (input: string) => boolean | string | Promise<boolean | string>,
+
+    /**
+     * If you want to replace another variable with this one, you can set this to the name of the variable you want to replace.
+     * This is useful if you want to deprecate a variable and replace it with another one.
+     */
+    replaces?: string,
+
+    /**
+     * If you want to remove the variable from the .env file, set this to a short text that describes why.
+     */
+    remove?: string
 }
 
 export class EnvFileDefinition {
@@ -86,6 +97,7 @@ export class EnvFileMigrator {
     private _resolvedValues: Map<string, string | undefined>;
     private _commentedLines: Set<EnvFileLine> | undefined;
     private _templateState: EnvFileState | undefined;
+    private _linesToRemove: Map<string, EnvFileLine> | undefined;
 
     public constructor(events: EventBus, paths: Paths) {
         this._events = events;
@@ -138,6 +150,7 @@ export class EnvFileMigrator {
     private async _collectValues(envFile: EnvFile): Promise<void> {
         this._resolvedValues = new Map<string, string | undefined>();
         this._commentedLines = new Set<EnvFileLine>();
+        this._linesToRemove = new Map<string, EnvFileLine>();
         const state = envFile.state;
         const templateState = this._templateState;
 
@@ -146,17 +159,45 @@ export class EnvFileMigrator {
             const templateLine = templateState?.getFirstLineForKey(key);
 
             const resolveDefault = async (fallback?: string | undefined): Promise<string | undefined> => {
+                let replacedValue: string | undefined = undefined;
+                let replacedTemplateValue: string | undefined = undefined;
+                if (options.replaces) {
+                    const replacesLine = state.getFirstLineForKey(options.replaces);
+                    if (replacesLine) {
+                        replacedValue = replacesLine.value;
+                    } else {
+                        const commentedReplacesLine = state.getFirstLineForCommentedKey(options.replaces);
+                        if (commentedReplacesLine) {
+                            commentedReplacesLine.uncomment();
+                            replacedValue = commentedReplacesLine.value;
+                            commentedReplacesLine.comment();
+                        }
+                    }
+                    const replacedTemplateLine = templateState?.getFirstLineForKey(options.replaces);
+                    if (replacedTemplateLine) {
+                        replacedTemplateValue = replacedTemplateLine.value;
+                    }
+                }
+
                 if (options.default) {
                     if (typeof options.default === 'function') {
-                        return await options.default(templateLine?.value);
+                        return await options.default(templateLine?.value ?? replacedTemplateValue, replacedValue);
                     }
                     return options.default + '';
+                }
+
+                if (replacedValue) {
+                    return replacedValue;
                 }
 
                 return fallback;
             };
 
             if (!line) {
+                if (options.remove) {
+                    continue;
+                }
+
                 if (options.uncomment !== false) {
                     const commentedLine = state.getFirstLineForCommentedKey(key);
                     if (commentedLine) {
@@ -171,6 +212,12 @@ export class EnvFileMigrator {
                 }
 
                 this._resolvedValues.set(key, await resolveDefault());
+                continue;
+            }
+
+            if (options.remove) {
+                this._linesToRemove.set(key, line);
+                this._resolvedValues.set(key, undefined);
                 continue;
             }
 
@@ -193,6 +240,10 @@ export class EnvFileMigrator {
 
     private async _askForMissing(): Promise<void> {
         for (const [key, options] of this._options.entries()) {
+            if (options.remove) {
+                continue;
+            }
+
             if (this._resolvedValues.get(key) === undefined && options.default === undefined) {
                 if (options.help) {
                     console.log(chalk.yellow('❓ ' + options.help));
@@ -226,9 +277,19 @@ export class EnvFileMigrator {
         const summaryValues = entries.map(([key, value]) => {
             const changed = envFile.get(key) !== value;
             foundChange ||= changed;
+
+            if (value === undefined) {
+                if (this._linesToRemove?.has(key)) {
+                    return `- ${chalk.bold(key)}: ${chalk.red('removed')} 🔧 because ${chalk.red(this._options.get(key)!.remove)}`;
+                } else {
+                    return null;
+                }
+            }
+
             const oldValue = envFile.get(key) ?? 'missing or commented';
-            return `- ${chalk.bold(key)}: ${chalk.green(value)}` + (changed ? ' ' + chalk.bold('🔧') + ' was ' + chalk.yellow(oldValue) : '');
-        }).join('\n');
+            const newValue = value ?? chalk.italic('empty');
+            return `- ${chalk.bold(key)}: ${chalk.green(newValue)}` + (changed ? ' 🔧 was ' + chalk.yellow(oldValue) : '');
+        }).filter(Boolean).join('\n');
 
         // If no changes were found, we can skip the confirmation
         // If we are forced, we need to show the confirmation anyway
@@ -247,13 +308,13 @@ Below is a list of all detected variables and their values. Any values that I've
 edited or added are marked with a 🔧.
 
 If everything looks correct, press ${chalk.bold('Enter')} to continue.
-To modify any values, press ${chalk.bold('n')} and ${chalk.bold('Enter')}, then select which variable you'd like to edit.
+To modify any values, press ${chalk.bold('n')} and ${chalk.bold('Enter')}, 
+then select which variable you'd like to edit.
 
 Collected environment variables:
 ----------------------------------
 ${summaryValues}
 `);
-
 
         return await confirm({
             message: 'Does this look good to you 👀? Answer "no" to edit the values.',
@@ -271,10 +332,26 @@ ${summaryValues}
     private async _editValue(key: string): Promise<void> {
         const currentValue = this._resolvedValues.get(key);
         const options = this._options.get(key);
+        if (!options) {
+            return;
+        }
+
         if (options.help) {
             console.log(chalk.yellow('❓ ' + options.help));
         }
-        let value = '';
+
+        if (options.remove && this._linesToRemove?.has(key)) {
+            if (await confirm({
+                message: `Do you want to restore the variable "${key}"?`,
+                default: false
+            })) {
+                this._linesToRemove.delete(key);
+            } else {
+                return;
+            }
+        }
+
+        let value: string | undefined;
         if (typeof options.editor === 'function') {
             value = await options.editor(key, currentValue, options);
         } else {
@@ -290,12 +367,19 @@ ${summaryValues}
     }
 
     private _applyValues(envFile: EnvFile): void {
-        for (const line of this._commentedLines) {
+        for (const line of this._commentedLines!) {
             line.uncomment();
         }
 
         for (const [key, value] of this._resolvedValues.entries()) {
-            envFile.set(key, value);
+            if (value === undefined) {
+                if (this._linesToRemove?.has(key)) {
+                    envFile.state.removeLine(this._linesToRemove.get(key)!);
+                }
+                continue;
+            }
+
+            envFile.set(key, value || '');
         }
         envFile.write();
         updateEnvFileHash(this._paths);

@@ -13,17 +13,16 @@ export class DockerComposeBody extends AbstractBody {
     }
 
     public hasService(serviceName: string): boolean {
-        serviceName = this._context.getRealPartialKey(serviceName);
-        return Boolean(this._value.services[serviceName]);
+        return Boolean(this._value.services[this._getServiceNameFromPartialKey(serviceName)]);
     }
 
     public setService(serviceName: string, value: Record<any, any>): void {
-        serviceName = this._context.getRealPartialKey(serviceName);
+        serviceName = this._getServiceNameFromPartialKey(serviceName);
         this._value.services[serviceName] = value;
     }
 
     public mergeService(serviceName: string, value: Record<any, any>): void {
-        serviceName = this._context.getRealPartialKey(serviceName);
+        serviceName = this._getServiceNameFromPartialKey(serviceName);
         if (!this._value.services[serviceName]) {
             throw new Error(`Service ${serviceName} does not exist`);
         }
@@ -40,5 +39,9 @@ export class DockerComposeBody extends AbstractBody {
 
     public outputParser(): FileBuilderParser {
         return 'yaml'
+    }
+
+    private _getServiceNameFromPartialKey(partialKey: string): string {
+        return this._context.partials.isApp(partialKey) ? 'app' : partialKey;
     }
 }

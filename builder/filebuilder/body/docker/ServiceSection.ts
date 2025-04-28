@@ -1,9 +1,14 @@
+import {Hooks} from '@builder/filebuilder/body/docker/PartialHookConsumer.js';
+import {Instructions} from './Instructions';
+
 export class ServiceSection {
-    private readonly _serviceName: string;
+    private readonly _partialKey: string;
+    private readonly _hooks: Hooks;
     private readonly _instructions: Record<string, Instructions> = {};
 
-    public constructor(serviceName: string) {
-        this._serviceName = serviceName;
+    public constructor(partialKey: string, hooks: Hooks) {
+        this._partialKey = partialKey;
+        this._hooks = hooks;
     }
 
     public getRoot(): Instructions {
@@ -45,13 +50,17 @@ export class ServiceSection {
 
     public get(name: string): Instructions {
         if (!this._instructions[name]) {
-            this._instructions[name] = new Instructions(this.getRootAlias(), this.getAlias(name));
+            this._instructions[name] = new Instructions(
+                this.getRootAlias(),
+                this.getAlias(name),
+                this._hooks.getProvider(this._partialKey)
+            );
         }
         return this._instructions[name];
     }
 
     public getAlias(name: string): string {
-        return this._serviceName + '_' + name;
+        return this._partialKey + '_' + name;
     }
 
     public has(name: string): boolean {
@@ -83,9 +92,9 @@ export class ServiceSection {
         addContent('prod');
 
 
-        const output = [];
+        const output: Array<string> = [];
         output.push(`# =====================================================
-# ${this._serviceName.toUpperCase()} service
+# ${this._partialKey.toUpperCase()} service
 # =====================================================`);
 
         let isFirst = true;
@@ -98,7 +107,7 @@ export class ServiceSection {
             }
 
             output.push(`
-# ${this._serviceName.toUpperCase()} - ${content.name.toUpperCase()}
+# ${this._partialKey.toUpperCase()} - ${content.name.toUpperCase()}
 # -----------------------------------------------------
 ${content.content}
 `);
@@ -107,5 +116,3 @@ ${content.content}
         return output.join('');
     }
 }
-
-import {Instructions} from "./Instructions";

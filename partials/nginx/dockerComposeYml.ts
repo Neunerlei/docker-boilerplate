@@ -1,10 +1,9 @@
 import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
 import type {BodyBuilder} from '@builder/partial/types.ts';
 
-export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, _, context) => {
+export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body) => {
     body.setService('nginx', {
         image: 'nginx:1.27-alpine',
-        container_name: '${PROJECT_NAME}-nginx',
         volumes: [
             './docker/certs:/etc/nginx/certs',
             './docker/nginx/config/nginx.dev${DOCKER_PROJECT_SSL_MARKER:-}.conf:/etc/nginx/nginx.conf:ro'

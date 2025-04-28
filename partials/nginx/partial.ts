@@ -1,30 +1,28 @@
 import {PartialDefinition} from '@builder/partial/types';
-import {NginxBody} from '@builder/filebuilder/body/NginxBody';
-import {replaceMarkerWithIndent} from '@builder/util/replaceMarkerWithIndent';
+import {NginxBody, type NginxFileType} from '@builder/filebuilder/body/NginxBody';
+import {replaceMarkerWithIndent} from '@builder/util/textUtils.js';
 import {dockerComposeYml} from './dockerComposeYml';
 
 export default function (): PartialDefinition {
     return {
         key: 'nginx',
         name: 'Nginx',
-        loadFiles: async (fs, utils) => {
+        loadFiles: async (_, utils) => {
             utils.setBasePath(import.meta.dirname);
             utils.loadRecursive('files', '/');
         },
-        buildFiles: async (fs, fb) => {
+        buildFiles: async (_, fb) => {
             await fb('nginx.conf')
                 .setSpecial('nginx')
-                .setSaver<NginxBody>(async ({body, context}) => {
-                    const fs = context.getFs();
-
-                    const knownNginxFiles = [
-                        '/docker/nginx/config/nginx.default.conf',
-                        '/docker/nginx/config/nginx.dev.conf',
-                        '/docker/nginx/config/nginx.dev.ssl.conf'
+                .setSaver<NginxBody>(async ({body, context: {fs}}) => {
+                    const knownNginxFiles: Array<{ type: NginxFileType, src: string }> = [
+                        {type: 'prod', src: '/docker/nginx/config/nginx.default.conf'},
+                        {type: 'dev', src: '/docker/nginx/config/nginx.dev.conf'},
+                        {type: 'devSsl', src: '/docker/nginx/config/nginx.dev.ssl.conf'}
                     ];
 
-                    const locations = body.toLocationString();
-                    for (const nginxFile of knownNginxFiles) {
+                    for (const {type, src: nginxFile} of knownNginxFiles) {
+                        const locations = body.toLocationString(type);
                         fs.writeFileSync(nginxFile,
                             replaceMarkerWithIndent(
                                 '###{locations}###',

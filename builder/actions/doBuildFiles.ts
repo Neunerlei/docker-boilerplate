@@ -9,5 +9,5 @@ export async function doBuildFiles(partial: PartialDefinition, context: BuildCon
 
     const fileBuilderFactory = (filename: string) => new FileBuilder(filename, context);
 
-    await partial.buildFiles(context.getFs(), fileBuilderFactory);
+    await partial.buildFiles(context.fs, fileBuilderFactory);
 }

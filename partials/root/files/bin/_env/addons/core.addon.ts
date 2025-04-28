@@ -9,5 +9,12 @@ export const addon: AddonEntrypoint = async (context) => ({
             .action(async () => {
                 await ((new EnvFileMigrator(context.events, context.paths)).setForced(true).migrate(context.env));
             });
+
+        program
+            .command('env-npm')
+            .description('Runs an npm command for the bin/env cli tool. This is useful for installing dependencies for custom cli commands.')
+            .action(async () => {
+                throw new Error('This command will never reach here, it is handled by the bin/env shell script.');
+            });
     }
 });

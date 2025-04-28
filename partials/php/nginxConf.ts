@@ -1,5 +1,5 @@
 import {NginxBody} from '@builder/filebuilder/body/NginxBody';
-import {textUtils} from '@builder/util/textUtils';
+import {indentText} from '@builder/util/textUtils';
 import type {BodyBuilder} from '@builder/partial/types';
 
 export const nginxConf = (createPublicShare: boolean): BodyBuilder<NginxBody> => {
@@ -31,15 +31,15 @@ include        fastcgi_params;
 `;
 
         if (createPublicShare) {
-            await body.setServiceLocation('php', `
+            await body.setPartialLocation('php', `
 try_files $uri $uri/ /index.php?$query_string;
 index index.php index.html index.htm;
 location ~ .php$ {
-${textUtils(fastcgiProxy, 1)}
+${indentText(fastcgiProxy, 1)}
 }
 `);
         } else {
-            await body.setServiceLocation('php', fastcgiProxy);
+            await body.setPartialLocation('php', fastcgiProxy);
         }
     };
 };

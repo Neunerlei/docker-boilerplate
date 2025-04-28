@@ -6,6 +6,7 @@ import {createEnvFile} from './env/EnvFile.ts';
 import {createPlatform} from './Platform.ts';
 import {loadAddons} from './loadAddons.ts';
 import {createContext, extendContext} from './Context.ts';
+import {welcome} from '@/welcome.js';
 
 export class Application {
     public async run(args: string[]) {
@@ -16,6 +17,7 @@ export class Application {
             extendContext(context, 'paths', createPaths());
             extendContext(context, 'platform', createPlatform());
             extendContext(context, 'pkg', createPackageJson(context.paths));
+            await welcome(context);
             await loadAddons(context);
             extendContext(context, 'env', await createEnvFile(context));
 
@@ -25,9 +27,10 @@ export class Application {
                 .name(pkg.name)
                 .description(pkg.description)
                 .version(pkg.version)
+                .option('--env-verbose', 'Verbosity of the bin/env Node.js bootstrap script')
                 .showSuggestionAfterError(true)
                 .helpCommand(true)
-                .addHelpText('beforeAll', () => ui.renderHelpIntro(pkg))
+                .addHelpText('beforeAll', () => ui.renderHelpIntro())
                 .configureHelp({
                     sortSubcommands: true
                 })

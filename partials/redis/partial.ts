@@ -1,9 +1,8 @@
-import type {PartialContext} from '@builder/partial/PartialContext.ts';
 import type {PartialDefinition} from '@builder/partial/types.ts';
 import {dockerComposeYml} from './dockerComposeYml.ts';
 import {envTpl} from './envTpl.ts';
 
-export default function (context: PartialContext): PartialDefinition {
+export default function (): PartialDefinition {
     return {
         key: 'redis',
         name: 'Redis',

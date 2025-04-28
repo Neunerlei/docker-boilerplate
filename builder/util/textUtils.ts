@@ -1,6 +1,6 @@
 import type {IFs} from 'memfs';
 
-export function textUtils(content: string, level?: number) {
+export function indentText(content: string, level?: number) {
     const lines = content.split('\n');
     const indent = '    '.repeat(level ?? 1);
     return lines.map(line => indent + line).join('\n');
@@ -25,4 +25,11 @@ export function replaceInFile(fs: IFs, path: string, search: string | string[], 
     }
 
     fs.writeFileSync(path, content);
+}
+
+export function replaceMarkerWithIndent(marker: string, replacement: string, content: string) {
+    const lines = content.split('\n');
+    const indent = lines.find(line => line.includes(marker))?.match(/^\s*/)?.[0] || '';
+    const replacementLines = replacement.split('\n').map(line => indent + line);
+    return content.replace(marker, replacementLines.join('\n').trimStart());
 }

@@ -21,10 +21,10 @@
     "allowJs": true,
     "esModuleInterop": true,
     "isolatedModules": true,
-    "noImplicitAny": true,
+    "noImplicitAny": false,
     "strictNullChecks": true,
     "moduleResolution": "node",
     "target": "esnext",
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
   }
 }

@@ -34,7 +34,7 @@ export class CommonUi {
         return this._events.triggerSync('ui:filter:errorHeader', {value: value.trim()}).value;
     }
 
-    public renderPackageInfo(pkg: PackageInfo): string {
+    public get greeting(): string {
         const lang = [
             ['Guten Morgen', 'Guten Tag', 'Guten Abend'], // German
             ['Good morning', 'Good day', 'Good evening'], // English
@@ -68,14 +68,12 @@ export class CommonUi {
         const h = new Date().getHours();
         const timeKey = h < 12 ? 0 : (h < 18 ? 1 : 2);
         const langKey = (Math.floor(Math.random() * lang.length));
-        const prefix = lang[langKey][timeKey];
-
-        return chalk.bold(prefix) + '! You are using ' + pkg.name + ' v' + pkg.version;
+        return this._events.triggerSync('ui:filter:greeting', {value: lang[langKey][timeKey]}).value;
     }
 
-    public renderHelpIntro(pkg: PackageInfo): string {
+    public renderHelpIntro(): string {
         return `${this.helpHeader}${this.helpDescription}
-${this.renderPackageInfo(pkg)}
+${this.greeting}! How can I help you today?
 `;
     }
 
@@ -88,5 +86,19 @@ ${this.renderPackageInfo(pkg)}
             this.errorHeader,
             (new PrettyError()).render(error)
         ].join('\n');
+    }
+
+    public renderWelcome(pkg: PackageInfo): string {
+        const header = this._events.triggerSync('ui:filter:welcomeHeader', {value: this.helpHeader}).value;
+        const welcomeDescription = this._events.triggerSync('ui:filter:welcomeDescription', {value: ''}).value;
+        const defaultMessage = `👋 ${this.greeting}! You are launching ${chalk.bold(pkg.name)} for the first time.
+            
+This script will help you to work with your project locally with ease. 
+Before we start, we must ensure that you have a ${chalk.bold('.env file')} in your project root,
+I will create one for you if it does not exist and guide you through any options that might need adjustments.`;
+        const message = this._events.triggerSync('ui:filter:welcome', {value: defaultMessage}).value;
+        return `${header}${welcomeDescription}
+${message}
+`;
     }
 }

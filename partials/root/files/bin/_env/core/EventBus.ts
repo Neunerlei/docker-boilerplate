@@ -33,13 +33,17 @@ interface SyncEventTypes {
     'ui:filter:helpHeader': { value: string };
     'ui:filter:helpDescription': { value: string };
     'ui:filter:errorHeader': { value: string };
+    'ui:filter:welcomeHeader': { value: string };
+    'ui:filter:welcomeDescription': { value: string };
+    'ui:filter:welcome': { value: string };
+    'ui:filter:greeting': { value: string };
 }
 
 export class EventBus {
     private readonly _async: Map<keyof AsyncEventTypes, Set<(arg: AsyncEventTypes[keyof AsyncEventTypes]) => Promise<void>>> = new Map();
     private readonly _sync: Map<keyof SyncEventTypes, Set<(arg: SyncEventTypes[keyof SyncEventTypes]) => void>> = new Map();
 
-    public async trigger<E extends keyof AsyncEventTypes>(event: E, arg: AsyncEventTypes[E] = undefined): Promise<AsyncEventTypes[E]> {
+    public async trigger<E extends keyof AsyncEventTypes>(event: E, arg: AsyncEventTypes[E]): Promise<AsyncEventTypes[E]> {
         const callbacks = this._async.get(event);
         if (callbacks) {
             for (const callback of callbacks) {
@@ -49,7 +53,7 @@ export class EventBus {
         return arg;
     }
 
-    public triggerSync<E extends keyof SyncEventTypes>(event: E, arg: SyncEventTypes[E] = undefined): SyncEventTypes[E] {
+    public triggerSync<E extends keyof SyncEventTypes>(event: E, arg: SyncEventTypes[E]): SyncEventTypes[E] {
         const callbacks = this._sync.get(event);
         if (callbacks) {
             for (const callback of callbacks) {

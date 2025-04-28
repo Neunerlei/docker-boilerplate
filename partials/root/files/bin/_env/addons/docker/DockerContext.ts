@@ -1,7 +1,7 @@
 import type {Context} from '@/Context.ts';
 import {promisify} from 'util';
 import {exec, execSync} from 'node:child_process';
-import {confirm, select} from '@inquirer/prompts';
+import {confirm, input, select} from '@inquirer/prompts';
 import process from 'node:process';
 import {
     executeCommand,
@@ -112,10 +112,10 @@ export class DockerContext {
 
     /**
      * Returns the unique name of this project (url-safe).
-     * It is determined by the `PROJECT_NAME` environment variable.
+     * It is determined by the `COMPOSE_PROJECT_NAME` environment variable.
      */
     public get projectName(): string {
-        return this._context.env.getGlobalRequired('PROJECT_NAME');
+        return this._context.env.getGlobalRequired('COMPOSE_PROJECT_NAME');
     }
 
     /**
@@ -487,6 +487,51 @@ I can try to let docker compose create the containers (without starting them) fo
     }
 
     /**
+     * Builds the app container in the current Dockerfile
+     * @param options
+     */
+    public async build(options?: {
+        imageName?: string;
+        tag?: string;
+        target?: string;
+        args?: Array<string>;
+    }) {
+        let imageName = options?.imageName;
+        if (!imageName) {
+            imageName = await input({
+                message: 'How should the image be named?',
+                default: this.projectName + '-app'
+            });
+        }
+        let tag = options?.tag;
+        if (!tag) {
+            tag = await input({
+                message: 'What tag should the image be tagged with?',
+                default: 'latest'
+            });
+        }
+
+        const args = Array.isArray(options?.args) ? options.args : [];
+        let buildTarget = options?.target;
+        if (!buildTarget) {
+            buildTarget = 'app_prod';
+        }
+
+        await this.executeDockerCommand(
+            [
+                'build',
+                '--target',
+                buildTarget,
+                '-t',
+                `${imageName}:${tag}`,
+                this._context.paths.projectDir,
+                ...args
+            ],
+            {foreground: true}
+        );
+    }
+
+    /**
      * Removes all containers and volumes of the project
      */
     public async clean(doConfirm?: boolean): Promise<void> {
@@ -549,8 +594,8 @@ I can try to let docker compose create the containers (without starting them) fo
         const result = execSync(`${composeExecutable} ${command} --help`).toString();
 
         // Remove everything before the "options" section
-        const resultTrimmed = result.substring(result.indexOf('Options:'));
-        return `\n  Inherited "${command}" docker compose command ${resultTrimmed}`;
+        const resultTrimmed = result.substring(result.indexOf('Options:') + 1);
+        return `\n  Inherited "${command}" Docker Compose o${resultTrimmed}`;
     }
 
     /**

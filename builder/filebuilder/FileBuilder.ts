@@ -8,7 +8,7 @@ import path from 'path';
 import {parse as parseYaml, stringify as stringifyYaml} from 'yaml';
 import {NginxBody} from './body/NginxBody';
 import {EntrypointBody} from './body/EntrypointBody';
-import {BodyBuilderCollector, type BodyBuilderState} from './BodyBuilderCollector';
+import {BodyBuilderCollector, type BodyBuilderContextPartial, type BodyBuilderState} from './BodyBuilderCollector';
 
 export interface FileBuilderBodyFactoryConfig {
     filename: string;
@@ -102,10 +102,10 @@ export class FileBuilder {
     /**
      * Does the same as "setDestinationDir", but uses the partial directory of the given service.
      * This will automatically place the file in the "app" directory, fi the service is the "app" service.
-     * @param service
+     * @param partialKey
      */
-    public setDestinationDirToService(service: string): this {
-        return this.setDestinationDir(this._context.getPartialDir(service));
+    public setDestinationDirToPartial(partialKey: string): this {
+        return this.setDestinationDir(this._context.partials.getOrFail(partialKey).outputDirectory);
     }
 
     /**
@@ -183,7 +183,7 @@ export class FileBuilder {
 
         if (content === undefined) {
             if (this._sourceDir) {
-                content = this._context.getFs().readFileSync(
+                content = this._context.fs.readFileSync(
                     path.join(
                         this._sourceDir,
                         this._filename
@@ -204,8 +204,6 @@ export class FileBuilder {
     }
 
     private async populateBody(body: AbstractBody) {
-        const buildContext = this._context;
-
         const builders = (await this.getResolvedBodyBuilders())?.get(this._filename);
         if (!builders) {
             return;
@@ -214,7 +212,7 @@ export class FileBuilder {
         const stack = [...builders.before, ...builders.default, ...builders.after];
 
         for (const fn of stack) {
-            await fn(body, this._filename, buildContext);
+            await fn(body, this._filename);
         }
     }
 
@@ -224,15 +222,17 @@ export class FileBuilder {
         }
 
         const state: BodyBuilderState = new Map();
-        const collector = new BodyBuilderCollector(state);
+        const contextPartial: BodyBuilderContextPartial = {current: undefined};
+        const collector = new BodyBuilderCollector(state, contextPartial);
 
-        for (const partialKey of await this._context.getPartialStack().getSortedKeys()) {
-            const partial = this._context.getPartialRegistry().get(partialKey);
-            if (typeof partial?.bodyBuilders !== 'function') {
+        for (const partial of await this._context.partials.sortedUsed) {
+            if (typeof partial?.definition.bodyBuilders !== 'function') {
                 continue;
             }
 
-            await partial?.bodyBuilders(collector);
+            contextPartial.current = partial;
+            await partial?.definition.bodyBuilders(collector);
+            contextPartial.current = undefined;
         }
 
         bodyBuilderState = state;
@@ -247,7 +247,7 @@ export class FileBuilder {
         const outputParser = body.outputParser?.() || this._parser || 'string';
         const value = body.getValue();
 
-        let content;
+        let content: string;
         if (outputParser === 'json') {
             content = JSON.stringify(value, null, 2);
         } else if (outputParser === 'yaml') {
@@ -267,7 +267,7 @@ export class FileBuilder {
         if (this._saver) {
             (this._saver)({filename, content, body, context: this._context});
         } else {
-            this._context.getFs().writeFileSync(outputPath, content);
+            this._context.fs.writeFileSync(outputPath, content);
         }
     }
 }

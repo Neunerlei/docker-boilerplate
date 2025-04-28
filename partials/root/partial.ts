@@ -1,19 +1,18 @@
-import {PartialContext} from '@builder/partial/PartialContext.js';
 import {PartialDefinition} from '@builder/partial/types.js';
 import {ObjectBody} from '@builder/filebuilder/body/ObjectBody.ts';
 
-export default function (context: PartialContext): PartialDefinition {
+export default function (): PartialDefinition {
     return {
         key: 'root',
         name: 'Root',
         standalone: true,
         versions: ['1.0'],
         selectable: false,
-        loadFiles: async (fs, utils) => {
+        loadFiles: async (_, utils) => {
             utils.setBasePath(import.meta.dirname);
             utils.loadRecursive('files', '/');
         },
-        buildFiles: async (fs, fb) => {
+        buildFiles: async (_, fb) => {
             await fb('.gitignore').setSourceDir('/').build();
             await fb('.env.tpl').setSourceDir('/').build();
             await fb('Dockerfile').setSpecial('dockerfile').build();

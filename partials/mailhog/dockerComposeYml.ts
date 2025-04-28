@@ -1,9 +1,8 @@
-import {FileBuilderCallback} from '@builder/partial/types';
 import {DockerComposeBody} from '@builder/filebuilder/body/DockerComposeBody';
+import type {BodyBuilder} from '@builder/partial/types.js';
 
-export const dockerComposeYml: FileBuilderCallback<DockerComposeBody> = async (body, _, context) => {
+export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body) => {
     body.setService('mailhog', {
-        container_name: '${PROJECT_NAME}-mailhog',
         image: 'mailhog/mailhog:v1.0.1',
         restart: 'no',
         ports: [

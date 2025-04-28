@@ -29,6 +29,11 @@ export class EnvFileState {
         return this;
     }
 
+    public removeLine(line: EnvFileLine): this {
+        this._lines.delete(line);
+        return this;
+    }
+
     public getFirstLineForKey(key: string): EnvFileLine | undefined {
         for (const line of this._lines) {
             if (line.keyMatches(key)) {

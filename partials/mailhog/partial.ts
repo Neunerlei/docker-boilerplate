@@ -15,12 +15,12 @@ export default function (): PartialDefinition {
                 .add('.env.tpl', envTpl)
                 .add('docker-compose.yml', dockerComposeYml, 'before')
                 .add('Dockerfile', async body => {
-                    body.get('php').getDev().addBefore('run.addMailhogSender', 'run.addSudo', `
+                    body.addHook('php', 'root:dependencies', `
 # Install mhsendmail (Mailhog sendmail)
 RUN curl --fail --silent --location --output /tmp/mhsendmail https://github.com/mailhog/mhsendmail/releases/download/v0.2.0/mhsendmail_linux_amd64 \\
     && chmod +x /tmp/mhsendmail \\
     && mv /tmp/mhsendmail /usr/bin/mhsendmail      
-`);
+`)
                 })
                 .add('php.dev.ini', async body => {
                     body.append('sendmail_path = "/usr/bin/mhsendmail -t --from=test@example.org --smtp-addr=mailhog:1025"', true);

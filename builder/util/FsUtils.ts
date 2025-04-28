@@ -1,7 +1,7 @@
 import {IFs} from 'memfs';
 import * as fs from 'fs';
 import * as path from 'path';
-import {PartialContext} from '../partial/PartialContext';
+import {Partial} from '../partial/Partial.js';
 import {askForAlternativeAppSourcesDirectory} from '../actions/askForAlternativeAppSourcesDirectory';
 
 export class FsUtils {
@@ -41,14 +41,17 @@ export class FsUtils {
         }
     }
 
-    public async loadAppSourcesRecursively(dirPath: string, partialContext: PartialContext) {
-        let targetPath = partialContext.getAppSourcesDirectory();
-        if (targetPath === '/app' && !partialContext.isMainPartial()) {
-            const realTargetPath = await askForAlternativeAppSourcesDirectory(partialContext.getKey());
-            targetPath = path.join('/', realTargetPath.replace(/^\//, ''));
-            partialContext.getBuildContext().setPartialDir(partialContext.getKey(), targetPath);
+    public async loadAppSourcesRecursively(dirPath: string, partial: Partial) {
+        let outputDirectory = partial.outputDirectory;
+        if (outputDirectory === '/app' && !partial.isApp) {
+            const realTargetPath = await askForAlternativeAppSourcesDirectory(
+                partial.key,
+                partial.buildContext.partials.app.key
+            );
+            outputDirectory = path.join('/', realTargetPath.replace(/^\//, ''));
+            partial.buildContext.partials.useOutputDirectoryFor(partial.key, outputDirectory);
         }
-        this.loadRecursive(dirPath, targetPath);
+        this.loadRecursive(dirPath, outputDirectory);
     }
 
     private makeFullPath(p: string) {
