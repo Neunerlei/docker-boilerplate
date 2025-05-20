@@ -1,0 +1,32 @@
+{
+  "exclude": [
+    "./dist",
+    "./node_modules"
+  ],
+  "compilerOptions": {
+    "rootDirs": [
+      "./src",
+      "./types"
+    ],
+    "paths": {
+      "@loom/*": [
+        "./src/*"
+      ]
+    },
+    "lib": [
+      "es2023"
+    ],
+    "outDir": "./dist",
+    "module": "esnext",
+    "strict": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "declaration": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "moduleResolution": "bundler",
+    "target": "esnext"
+  }
+}

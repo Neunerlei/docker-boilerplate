@@ -2,24 +2,29 @@ import {Paths} from './Paths';
 import {IFs} from 'memfs';
 import {PartialRegistry} from '../partial/PartialRegistry';
 import type {Summary} from '@boiler/util/Summary.js';
+import type {EventBus} from '@boiler/util/EventBus.js';
+import type {Context} from '@boiler/core/Context.js';
 
-export class BuildContext {
+export class BuildContext implements Context {
     private readonly _paths: Paths;
     private readonly _fs: IFs;
     private readonly _registryResolver: () => PartialRegistry;
     private readonly _summary: Summary;
+    private readonly _events: EventBus;
     private _registry: PartialRegistry | undefined;
 
     public constructor(
         paths: Paths,
         fs: IFs,
         registryResolver: () => PartialRegistry,
-        summary: Summary
+        summary: Summary,
+        events: EventBus
     ) {
         this._paths = paths;
         this._fs = fs;
         this._registryResolver = registryResolver;
         this._summary = summary;
+        this._events = events;
     }
 
     /**
@@ -55,5 +60,12 @@ export class BuildContext {
      */
     public get summary(): Summary {
         return this._summary;
+    }
+
+    /**
+     * Returns the event bus, which can be used to register and trigger events.
+     */
+    public get events(): EventBus {
+        return this._events;
     }
 }

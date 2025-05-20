@@ -1,12 +1,12 @@
 import {PartialDefinition, PartialFactory} from './types';
 import {Partial, type PartialState} from './Partial.js';
-import {BuildContext} from '../util/BuildContext';
 import {PartialSummary} from '@boiler/util/Summary.js';
 import {PartialKeySorter} from '@boiler/partial/PartialKeySorter.js';
 import {RecursiveRequirementsResolver} from '@boiler/partial/RecursiveRequirementsResolver.js';
+import type {Context} from '@boiler/core/Context.js';
 
 export class PartialRegistry {
-    private readonly _context: BuildContext;
+    private readonly _context: Context;
     private readonly _requirementResolver: RecursiveRequirementsResolver;
     private readonly _usedKeys: Set<string> = new Set();
     private _sortedUsedKeys?: string[];
@@ -14,7 +14,7 @@ export class PartialRegistry {
     private readonly _partials: Map<string, Partial> = new Map();
     private readonly _states: Map<string, PartialState> = new Map();
 
-    public constructor(context: BuildContext) {
+    public constructor(context: Context) {
         this._context = context;
         this._requirementResolver = new RecursiveRequirementsResolver();
     }

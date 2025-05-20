@@ -1,0 +1,16 @@
+{
+  "name": "urdev",
+  "version": "1.0.0",
+  "description": "",
+  "bin": "./dist/index.js",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "scripts": {
+    "dev": "tsc --watch",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "tar": "^7.4.3"
+  }
+}

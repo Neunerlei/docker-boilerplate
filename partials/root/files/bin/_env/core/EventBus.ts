@@ -29,7 +29,7 @@ export interface AsyncEventTypes {
     'error:after': { error: Error };
 }
 
-interface SyncEventTypes {
+export interface SyncEventTypes {
     'ui:filter:helpHeader': { value: string };
     'ui:filter:helpDescription': { value: string };
     'ui:filter:errorHeader': { value: string };

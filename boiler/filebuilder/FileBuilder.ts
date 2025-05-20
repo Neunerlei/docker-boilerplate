@@ -2,12 +2,8 @@ import {AbstractBody} from './body/AbstractBody';
 import {BuildContext} from '../util/BuildContext';
 import {StringBody} from './body/StringBody';
 import {ObjectBody} from './body/ObjectBody';
-import {DockerfileBody} from './body/DockerfileBody';
-import {DockerComposeBody} from './body/DockerComposeBody';
 import path from 'path';
 import {parse as parseYaml, stringify as stringifyYaml} from 'yaml';
-import {NginxBody} from './body/NginxBody';
-import {EntrypointBody} from './body/EntrypointBody';
 import {BodyBuilderCollector, type BodyBuilderContextPartial, type BodyBuilderState} from './BodyBuilderCollector';
 
 export interface FileBuilderBodyFactoryConfig {
@@ -21,35 +17,34 @@ export type FileBuilderBodySaver<T = AbstractBody> = (args: {
     body: T,
     context: BuildContext
 }) => Promise<void>;
-export type FileBuilderBodyFactory = (config: FileBuilderBodyFactoryConfig) => AbstractBody;
+export type FileBuilderBodyFactory = (
+    config: FileBuilderBodyFactoryConfig,
+    context: BuildContext
+) => AbstractBody;
 export type FileBuilderParser = 'json' | 'yaml' | 'string';
-
-const specialFactories = {
-    dockerfile: (context: BuildContext) => new DockerfileBody(context),
-    dockerCompose: (context: BuildContext) => new DockerComposeBody(context),
-    nginx: (context: BuildContext) => new NginxBody(context),
-    entrypoint: (_: BuildContext, content: any) => new EntrypointBody(content ?? '')
-};
 
 let bodyBuilderState: BodyBuilderState | undefined;
 
 export class FileBuilder {
     private readonly _filename: string;
     private readonly _context: BuildContext;
+    private readonly _specialFactories: Record<string, FileBuilderBodyFactory>;
     private _bodyFactory: FileBuilderBodyFactory;
     private _parser: FileBuilderParser = 'string';
     private _sourceDir: string | undefined;
     private _destinationDir: string | undefined;
-    private _special: keyof typeof specialFactories | undefined;
+    private _special: string | undefined;
     private _content: any;
     private _saver: FileBuilderBodySaver<any> | undefined;
 
     public constructor(
         filename: string,
-        context: BuildContext
+        context: BuildContext,
+        specialFactories: Record<string, FileBuilderBodyFactory>
     ) {
         this._filename = filename;
         this._context = context;
+        this._specialFactories = specialFactories;
 
         if (filename.endsWith('.json')) {
             this._parser = 'json';
@@ -113,7 +108,7 @@ export class FileBuilder {
      * It will also disable the default/defined body builder. This is used for internal body types like Dockerfile or Nginx.
      * @param special
      */
-    public setSpecial(special: keyof typeof specialFactories): this {
+    public setSpecial(special: string): this {
         this._special = special;
         return this;
     }
@@ -145,7 +140,7 @@ export class FileBuilder {
     public async build(): Promise<void> {
         const body = this.buildBody();
         await this.populateBody(body);
-        this.persistBody(body);
+        await this.persistBody(body);
     }
 
     private buildBody(): AbstractBody {
@@ -155,8 +150,11 @@ export class FileBuilder {
 
     private buildSpecialBody(): AbstractBody | undefined {
         if (this._special) {
-            if (specialFactories[this._special]) {
-                return specialFactories[this._special](this._context, this._content);
+            if (this._specialFactories[this._special]) {
+                return this._specialFactories[this._special]({
+                    filename: this._filename,
+                    content: this._content
+                }, this._context);
             }
 
             throw new Error(`Unknown special file type: ${this._special}`);
@@ -168,7 +166,7 @@ export class FileBuilder {
             return this._bodyFactory({
                 filename: this._filename,
                 content
-            });
+            }, this._context);
         }
 
         if (typeof content === 'object') {
@@ -239,7 +237,7 @@ export class FileBuilder {
         return state;
     }
 
-    private persistBody(body: AbstractBody) {
+    private async persistBody(body: AbstractBody) {
         const filename = this._filename;
         const outputDir = this._destinationDir || this._sourceDir || '/';
         const outputPath = path.join(outputDir, filename);
@@ -265,7 +263,7 @@ export class FileBuilder {
         }
 
         if (this._saver) {
-            (this._saver)({filename, content, body, context: this._context});
+            await (this._saver)({filename, content, body, context: this._context});
         } else {
             this._context.fs.writeFileSync(outputPath, content);
         }

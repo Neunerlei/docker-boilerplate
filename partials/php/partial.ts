@@ -31,7 +31,7 @@ export default function (partial: Partial): PartialDefinition {
                     default: true
                 });
                 if (createPublicShare) {
-                    summary.addMessage('The public directory of your PHP application will be shared with nginx.');
+                    summary.addMessage('The "/var/www/html/public" directory will be shared with webserver.');
                 }
             }
 
@@ -72,6 +72,8 @@ export default function (partial: Partial): PartialDefinition {
                 .setDestinationDir('/docker/php')
                 .setSpecial('entrypoint')
                 .build();
+            
+            fs.chmodSync('/docker/php/php.entrypoint.dev.sh', 0o755);
         },
         bodyBuilders: async (collector) => {
             collector

@@ -1,6 +1,7 @@
 import {type BodyBuilder} from '@boiler/partial/types';
 import {DockerComposeBody} from '@boiler/filebuilder/body/DockerComposeBody';
 import type {NodeUsage} from './askForUsage.js';
+import {fbSnipDockerComposeVolumeShare} from '@boiler/filebuilder/snippets.js';
 
 export function dockerComposeYml(usage: NodeUsage): BodyBuilder<DockerComposeBody> {
     return async (body, {partial}) => {
@@ -20,11 +21,12 @@ export function dockerComposeYml(usage: NodeUsage): BodyBuilder<DockerComposeBod
             restart: 'no',
             volumes: [
                 '.' + outputDirectory + ':/var/www/html',
-                './docker/node/node.entrypoint.dev.sh:/usr/bin/app/entrypoint.sh'
+                './docker/certs:/var/www/certs'
             ],
             environment: [
                 'DOCKER_PROJECT_INSTALLED=${DOCKER_PROJECT_INSTALLED:-"false"}',
-                'DOCKER_PROJECT_DOMAIN=${DOCKER_PROJECT_DOMAIN:-localhost}'
+                'DOCKER_PROJECT_DOMAIN=${DOCKER_PROJECT_DOMAIN:-localhost}',
+                `DOCKER_PROJECT_PORT=\${DOCKER_PROJECT_PORT:-${usage.port}}`
             ],
             extra_hosts: [
                 'host.docker.internal:host-gateway'
@@ -40,10 +42,21 @@ export function dockerComposeYml(usage: NodeUsage): BodyBuilder<DockerComposeBod
                 start_period: '10s'
             };
             service.ports = [
-                `\${DOCKER_PROJECT_IP:-127.0.0.1}:${usage.port}:${usage.port}`
+                `\${DOCKER_PROJECT_IP:-127.0.0.1}:\${DOCKER_PROJECT_PORT:-${usage.port}}:${usage.port}`
             ];
         }
 
         body.setService('node', service);
     };
 }
+
+export const dockerComposeYmlNginxShare: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
+    fbSnipDockerComposeVolumeShare(
+        'public',
+        partial.key,
+        '/data',
+        'nginx',
+        '/var/www/html/' + partial.key + '_public',
+        body
+    );
+};

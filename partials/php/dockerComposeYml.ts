@@ -2,6 +2,7 @@ import {DockerComposeBody} from '@boiler/filebuilder/body/DockerComposeBody';
 import type {BodyBuilder} from '@boiler/partial/types.js';
 import {envRedisDockerComposeEnvironmentDefinition} from '../redis/envTpl.js';
 import {envMysqlDockerComposeEnvironmentDefinition} from '../mysql/envTpl.js';
+import {fbSnipDockerComposeVolumeShare} from '@boiler/filebuilder/snippets.js';
 
 export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
     body.merge({
@@ -26,8 +27,7 @@ export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, {pa
         restart: 'no',
         volumes: [
             'php_socket:/var/run/php',
-            '.' + outputDirectory + ':/var/www/html',
-            './docker/php/php.entrypoint.dev.sh:/user/bin/app/entrypoint.local.sh'
+            '.' + outputDirectory + ':/var/www/html'
         ],
         healthcheck: {
             test: 'cgi-fcgi -bind -connect 127.0.0.1:9000 || exit 1',
@@ -46,11 +46,15 @@ export const dockerComposeYml: BodyBuilder<DockerComposeBody> = async (body, {pa
 };
 
 export const dockerComposeYmlNginxShare: BodyBuilder<DockerComposeBody> = async (body, {partial}) => {
-    body.mergeService('nginx', {
-        volumes: [
-            '.' + partial.outputDirectory + '/public:/var/www/html/public'
-        ]
-    });
+    fbSnipDockerComposeVolumeShare(
+        'public',
+        partial.key,
+        '/var/www/html/public',
+        'nginx',
+        '/var/www/html/' + partial.key + '_public',
+        body,
+        '.' + partial.outputDirectory + '/public'
+    );
 };
 
 export const dockerComposeYmlRedisAddon: BodyBuilder<DockerComposeBody> = async (body) => {

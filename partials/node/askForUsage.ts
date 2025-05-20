@@ -3,16 +3,17 @@ import {confirm, input} from '@inquirer/prompts';
 import chalk from 'chalk';
 import {uiLogInfo, uiTextBlock, uiTextNsGetter} from '@boiler/util/uiUtils.js';
 
+export type NodeProdImageType = 'standalone' | 'copy' | 'static';
+
 export type NodeUsage = {
     runsInProduction: boolean;
     handlesWebTraffic: boolean;
     prodImageType: NodeProdImageType;
+    createPublicShare: boolean;
     port: number;
     copyPathSource: string;
     copyPathTarget: string;
 }
-
-export type NodeProdImageType = 'standalone' | 'copy' | 'static';
 
 export async function askForUsage(partial: Partial): Promise<NodeUsage> {
     const {isApp, summary, buildContext} = partial;
@@ -40,10 +41,8 @@ Please answer a few questions to set it up correctly.`), 'Node.js setup');
             message: nodeNs('Do you plan on running a dev server that needs an open port?')
         });
 
-        if (isSoleStandalonePartial) {
-            prodImageType = 'static';
-        } else if (!isApp && await confirm({
-            message: nodeNs(`Node is not the main application, should the build output automatically be copied into the app (${partial.getOtherPartialOrFail('app').name}) image?`)
+        if (!isSoleStandalonePartial && !isApp && await confirm({
+            message: nodeNs(`Node is not the app service, should the build output automatically be copied into the app (${partial.getOtherPartialOrFail('app').name}) image?`)
         })) {
             prodImageType = 'copy';
         } else {
@@ -103,15 +102,28 @@ Please answer a few questions to set it up correctly.`), 'Node.js setup');
             `output will be copied from ${copyPathSource} to ${copyPathTarget} in a ${chalk.bold('static image')}.`
         );
     } else {
-        summary.addMessage(
-            `will run in a standalone image.`
-        );
+        summary.addMessage(`will run in a standalone image.`);
     }
+
+    let createPublicShare = false;
+    if (partial.getOtherPartial('nginx')?.isUsed) {
+        if (prodImageType === 'static' || prodImageType === 'standalone') {
+            createPublicShare = await confirm({
+                message: nodeNs('You are running nginx, do you want to share the "' + copyPathTarget + '" directory, so assets can be served by nginx?'),
+                default: true
+            });
+            if (createPublicShare) {
+                summary.addMessage('The "' + copyPathTarget + '" directory will be shared with webserver.');
+            }
+        }
+    }
+
 
     return {
         runsInProduction,
         handlesWebTraffic,
         prodImageType,
+        createPublicShare,
         port,
         copyPathSource,
         copyPathTarget

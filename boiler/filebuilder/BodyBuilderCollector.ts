@@ -3,7 +3,6 @@ import {StringBody} from './body/StringBody';
 import {ObjectBody} from './body/ObjectBody';
 import {DockerfileBody} from './body/DockerfileBody';
 import {DockerComposeBody} from './body/DockerComposeBody';
-import {NginxBody} from './body/NginxBody';
 import {EntrypointBody} from './body/EntrypointBody';
 import type {Partial} from '@boiler/partial/Partial.js';
 
@@ -36,7 +35,6 @@ export class BodyBuilderCollector {
     public add(filename: '_env/tsconfig.json', builder: BodyBuilder<ObjectBody>, position?: BodyBuilderPosition): this;
     public add(filename: 'Dockerfile', builder: BodyBuilder<DockerfileBody>, position?: BodyBuilderPosition): this;
     public add(filename: 'docker-compose.yml', builder: BodyBuilder<DockerComposeBody>, position?: BodyBuilderPosition): this;
-    public add(filename: 'nginx.conf', builder: BodyBuilder<NginxBody>, position?: BodyBuilderPosition): this;
     public add(filename: 'php.dev.ini', builder: BodyBuilder<StringBody>, position?: BodyBuilderPosition): this;
     public add(filename: 'php.entrypoint.dev.sh', builder: BodyBuilder<EntrypointBody>, position?: BodyBuilderPosition): this;
     public add(filename: 'node.entrypoint.dev.sh', builder: BodyBuilder<EntrypointBody>, position?: BodyBuilderPosition): this;

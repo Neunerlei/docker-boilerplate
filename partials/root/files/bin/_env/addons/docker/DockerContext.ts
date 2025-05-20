@@ -132,10 +132,19 @@ export class DockerContext {
      * environment variables
      */
     public get isSsl(): boolean {
-        if (this._context.env.getGlobal('DOCKER_PROJECT_PORT') === '443') {
+        const {env} = this._context;
+        if (env.getGlobal('DOCKER_PROJECT_PORT') === '443') {
             return true;
         }
-        return this._context.env.getGlobal('DOCKER_PROJECT_PROTOCOL') === 'https';
+
+        if (env.getGlobal('DOCKER_PROJECT_PROTOCOL') === 'https') {
+            return true;
+        }
+
+        return (
+            env.getGlobal('DOCKER_PROJECT_INSTALLED') === 'true' &&
+            !!env.getGlobal('DOCKER_PROJECT_SSL_MARKER')
+        );
     }
 
     /**

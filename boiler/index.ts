@@ -16,13 +16,15 @@ import {Summary} from '@boiler/util/Summary.js';
 import process from 'node:process';
 import {doDumpFilesToOutput} from '@boiler/actions/doDumpFilesToOutput.js';
 import {doShowWelcome} from '@boiler/actions/doShowWelcome.js';
+import {EventBus} from './util/EventBus.js';
 
 await (async function index() {
     try {
+        const events = new EventBus();
         const paths = new Paths(import.meta.filename);
         const fs = memfs().fs;
         const summary = new Summary();
-        const context = new BuildContext(paths, fs, (): PartialRegistry => registry, summary);
+        const context = new BuildContext(paths, fs, (): PartialRegistry => registry, summary, events);
         const registry = new PartialRegistry(context);
 
         doShowWelcome();
@@ -45,6 +47,7 @@ await (async function index() {
             }
         };
 
+        await runForEachPartial((partial) => callIfSet(partial, 'events', events));
         await runForEachPartial((partial) => callIfSet(partial, 'init'));
         await runForEachPartial((partial) => callIfSet(partial, 'loadFiles', fs, new FsUtils(fs)));
         await runForEachPartial((partial) => doBuildFiles(partial, context));

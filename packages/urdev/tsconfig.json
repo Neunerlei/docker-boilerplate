@@ -1,0 +1,31 @@
+{
+  "include": [
+    "./index.ts"
+  ],
+  "exclude": [
+    "./dist",
+    "./node_modules"
+  ],
+  "compilerOptions": {
+    "paths": {
+      "@urdev/*": [
+        "./src/*"
+      ]
+    },
+    "lib": [
+      "es2023"
+    ],
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "module": "Node16",
+    "strict": true,
+    "resolveJsonModule": true,
+    "allowJs": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "moduleResolution": "Node16",
+    "target": "es2022"
+  }
+}

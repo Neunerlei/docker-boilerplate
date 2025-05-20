@@ -3,17 +3,17 @@ import chalk from 'chalk';
 const uiInfoOnceMap = new Map<string, boolean>();
 
 /**
- * Prints the given message to the console with a yellow "🤔" prefix.
+ * Prints the given message to the console with a yellow "🤓" prefix.
  * @param message
  * @param title
  */
 export function uiLogInfo(message: string, title?: string): void {
-    console.log(`🤔 ${chalk.yellowBright.bold(title ?? 'Helpful advice')}
+    console.log(`🤓 ${chalk.yellowBright.bold(title ?? 'Helpful advice')}
 ${chalk.yellow(message)}`);
 }
 
 /**
- * Prints the given message to the console with a yellow "🤔" prefix, but only once for each unique key.
+ * Prints the given message to the console with a yellow "🤓" prefix, but only once for each unique key.
  * @param key
  * @param message
  * @param title

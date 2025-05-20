@@ -13,9 +13,12 @@ export class Application {
         const events = new EventBus();
         const ui = new CommonUi(events);
         try {
-            const context = createContext(events, ui);
-            extendContext(context, 'paths', createPaths());
-            extendContext(context, 'platform', createPlatform());
+            const context = createContext(
+                events,
+                ui,
+                createPaths(),
+                createPlatform()
+            );
             extendContext(context, 'pkg', createPackageJson(context.paths));
             await welcome(context);
             await loadAddons(context);

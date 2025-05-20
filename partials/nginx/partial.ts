@@ -1,12 +1,19 @@
 import {PartialDefinition} from '@boiler/partial/types';
-import {NginxBody, type NginxFileType} from '@boiler/filebuilder/body/NginxBody';
-import {replaceMarkerWithIndent} from '@boiler/util/textUtils.js';
 import {dockerComposeYml} from './dockerComposeYml';
+import {NginxBody} from './filebuilder/NginxBody.js';
+import {askForRouting} from './askForRouting.js';
+import type {Locations} from './filebuilder/Locations.js';
+import {replaceMarkerWithIndent} from '@boiler/util/textUtils.js';
 
 export default function (): PartialDefinition {
     return {
         key: 'nginx',
         name: 'Nginx',
+        events: async (events) => {
+            events.on('filebuilder:collect:specialFactories', async ({factories}) => {
+                factories.nginx = () => new NginxBody();
+            });
+        },
         loadFiles: async (_, utils) => {
             utils.setBasePath(import.meta.dirname);
             utils.loadRecursive('files', '/');
@@ -14,20 +21,20 @@ export default function (): PartialDefinition {
         buildFiles: async (_, fb) => {
             await fb('nginx.conf')
                 .setSpecial('nginx')
-                .setSaver<NginxBody>(async ({body, context: {fs}}) => {
-                    const knownNginxFiles: Array<{ type: NginxFileType, src: string }> = [
-                        {type: 'prod', src: '/docker/nginx/config/nginx.default.conf'},
-                        {type: 'dev', src: '/docker/nginx/config/nginx.dev.conf'},
-                        {type: 'devSsl', src: '/docker/nginx/config/nginx.dev.ssl.conf'}
+                .setSaver<NginxBody>(async ({body, context: {fs, partials}}) => {
+                    await askForRouting(body, partials);
+                    const bodies: Array<{ locations: Locations, src: string }> = [
+                        {locations: body.dev, src: '/docker/nginx/config/nginx.dev.conf'},
+                        {locations: body.devSsl, src: '/docker/nginx/config/nginx.dev.ssl.conf'},
+                        {locations: body.prod, src: '/docker/nginx/config/nginx.default.conf'}
                     ];
 
-                    for (const {type, src: nginxFile} of knownNginxFiles) {
-                        const locations = body.toLocationString(type);
-                        fs.writeFileSync(nginxFile,
+                    for (const {locations, src} of bodies) {
+                        fs.writeFileSync(src,
                             replaceMarkerWithIndent(
                                 '###{locations}###',
-                                locations,
-                                fs.readFileSync(nginxFile, 'utf-8') + ''
+                                locations.toString(),
+                                fs.readFileSync(src, 'utf-8') + ''
                             )
                         );
                     }

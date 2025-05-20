@@ -18,10 +18,17 @@ export interface Context {
 
 const targetProp = Symbol('targetProp');
 
-export function createContext(events: EventBus, ui: CommonUi): Context {
+export function createContext(
+    events: EventBus,
+    ui: CommonUi,
+    paths: Paths,
+    platform: Platform
+): Context {
     return new Proxy({
         events,
         ui,
+        paths,
+        platform,
         program: new Command()
     } as Context, {
         get(target, prop) {

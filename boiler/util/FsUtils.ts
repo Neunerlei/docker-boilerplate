@@ -43,7 +43,7 @@ export class FsUtils {
 
     public async loadAppSourcesRecursively(dirPath: string, partial: Partial) {
         let outputDirectory = partial.outputDirectory;
-        if (outputDirectory === '/app' && !partial.isApp) {
+        if (!partial.isApp && partial.definition.standalone) {
             const realTargetPath = await askForAlternativeAppSourcesDirectory(
                 partial.key,
                 partial.buildContext.partials.app.key

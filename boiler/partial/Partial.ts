@@ -1,6 +1,7 @@
 import {PartialDefinition} from './types';
 import {BuildContext} from '../util/BuildContext';
 import type {PartialSummary} from '@boiler/util/Summary.js';
+import type {Context} from '@boiler/core/Context.js';
 
 export interface PartialState {
     /**
@@ -29,12 +30,12 @@ export interface PartialState {
 
 export class Partial {
     private readonly _state: PartialState;
-    private readonly _buildContext: BuildContext;
+    private readonly _buildContext: Context;
     private readonly _summary: PartialSummary;
 
     public constructor(
         state: PartialState,
-        buildContext: BuildContext,
+        buildContext: Context,
         summary: PartialSummary
     ) {
         this._state = state;

@@ -1,3 +1,25 @@
+# Todos
+
+DOCKER_PROJECT_PROTOCOL auf https setzen wenn installiert
+DOCKER_PROJECT_PATH einführen und auf / setzen, vorbereitung für path deployment
+DOCKER_PROJECT_DOMAIN in DOCKER_PROJECT_HOST umbennen
+nginx fast_cgi_params Reihenfolge
+nginx slash am ende von alias
+
+// .set('DOCKER_PROJECT_IP', projectIp)
+.set('DOCKER_PROJECT_HOST', projectDomain)
+.set('DOCKER_PROJECT_PATH', '/')
+.set('DOCKER_PROJECT_PROTOCOL', 'https')
+.set('DOCKER_PROJECT_SSL_MARKER', '.ssl');
+
+Node healthcheck test: curl --fail ${DOCKER_PROJECT_PROTOCOL:-http}://localhost:8000 --insecure || exit 1
+Node https nginx proxy_pass https://app:8000;
+Docker Compose Schema based
+on https://github.com/futpib/compose-spec-schema/blob/master/src/scripts/json-to-typescript/index.ts
+and https://github.com/compose-spec/compose-spec/blob/main/schema/compose-spec.json
+
+urdo
+
 # Dev Boilerplates
 
 This repository contains a shell script to generate boilerplates for web environments.

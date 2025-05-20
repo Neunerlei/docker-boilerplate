@@ -1,7 +1,7 @@
 import {Partial} from '@boiler/partial/Partial.js';
 import {PartialDefinition} from '@boiler/partial/types.js';
 import {dockerfile} from './dockerfile.js';
-import {dockerComposeYml} from './dockerComposeYml.js';
+import {dockerComposeYml, dockerComposeYmlNginxShare} from './dockerComposeYml.js';
 import {nginxConf} from './nginxConf.js';
 import {replaceInFile} from '@boiler/util/textUtils.js';
 import {askForUsage, type NodeUsage} from './askForUsage.js';
@@ -29,6 +29,8 @@ export default function (partial: Partial): PartialDefinition {
                 .setSpecial('entrypoint')
                 .setContent('npm install\nnpm run dev')
                 .build();
+            
+            fs.chmodSync('/docker/node/node.entrypoint.dev.sh', 0o755);
 
             // Replace the node container in the npm command
             replaceInFile(
@@ -47,6 +49,10 @@ export default function (partial: Partial): PartialDefinition {
                 .add('Dockerfile', dockerfile(usage), 'before')
                 .add('docker-compose.yml', dockerComposeYml(usage), 'before')
                 .add('nginx.conf', nginxConf(usage));
+
+            if (usage.createPublicShare) {
+                collector.add('docker-compose.yml', dockerComposeYmlNginxShare);
+            }
         }
     };
 }

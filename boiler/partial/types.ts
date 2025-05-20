@@ -4,6 +4,7 @@ import {IFs} from 'memfs';
 import {FsUtils} from '../util/FsUtils.js';
 import {FileBuilder} from '../filebuilder/FileBuilder.js';
 import {BodyBuilderCollector} from '../filebuilder/BodyBuilderCollector.js';
+import type {EventBus} from '@boiler/util/EventBus.js';
 
 export type BodyBuilder<T = any> = (body: T, context: { filename: string, partial: Partial }) => Promise<void>;
 
@@ -84,6 +85,13 @@ export interface PartialDefinition {
      * Useful for setting up some initial state or to ask the user for some input.
      */
     init?: () => Promise<void>;
+
+    /**
+     * Executed after the init callback and should use the provided event bus to register event listeners.
+     * You can safely assume that the init callback has been executed and all partials have been loaded.
+     * @param eventBus
+     */
+    events?: (eventBus: EventBus) => Promise<void>;
 
     /**
      * The main callback of the partial to do stuff.

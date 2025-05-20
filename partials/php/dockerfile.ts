@@ -40,6 +40,8 @@ RUN --mount=type=cache,id=apt-cache,target=/var/cache/apt,sharing=locked \\
     useradd -u \${DOCKER_UID} -g www-data www-data
 `)
             .add('copy.entrypoint', 'COPY docker/php/php.entrypoint.dev.sh /user/bin/app/entrypoint.local.sh')
+            .add('run.entrypointPermissions', 'RUN chmod 755 /user/bin/app/entrypoint.sh && ' +
+                'chmod 755 /user/bin/app/entrypoint.local.sh')
             .add('user.wwwData', 'USER www-data');
 
         // PROD

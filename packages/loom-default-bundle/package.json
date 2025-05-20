@@ -1,0 +1,9 @@
+{
+  "name": "@urdev/loom-default-bundle",
+  "version": "1.0.0",
+  "description": "",
+  "main": "loom.bundle.ts",
+  "dependencies": {
+    "@urdev/loom": "file:../loom"
+  }
+}

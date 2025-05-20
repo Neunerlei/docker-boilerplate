@@ -1,32 +1,32 @@
-import {PartialSortRules} from "./PartialSortRules";
+import {PartialSortRules} from './PartialSortRules';
 
 export class PartialKeySorter {
     protected _keys: string[] = [];
     protected _rules: { [key: string]: { before: string[], after: string[] } } = {};
 
-    public addKey(key: string): void {
+    public addKey(key: string) {
         this._keys.push(key);
     }
 
-    public before(keyA: string, keyB: string): void {
+    public before(keyA: string, keyB: string) {
         if (!this._rules[keyA]) {
             this._rules[keyA] = {before: [], after: []};
         }
         this._rules[keyA].before.push(keyB);
     }
 
-    public after(keyA: string, keyB: string): void {
+    public after(keyA: string, keyB: string) {
         if (!this._rules[keyA]) {
             this._rules[keyA] = {before: [], after: []};
         }
         this._rules[keyA].after.push(keyB);
     }
 
-    public getRules(key: string): PartialSortRules {
+    public getRules(key: string) {
         return new PartialSortRules(key, this);
     }
 
-    public getSorted(): string[] {
+    public getSorted() {
         // Create adjacency list representation of the graph
         const graph: Map<string, Set<string>> = new Map();
         const inDegree: Map<string, number> = new Map();
